@@ -1,0 +1,78 @@
+# Docker Compose reference guide:
+# https://docs.docker.com/go/compose-spec-reference/
+services:
+  server:
+    build:
+      context: .
+      target: base
+    stop_signal: SIGINT
+    command: >
+      sh -c "flask db upgrade && flask run"
+    ports:
+      - ${DASHBOARDOP_EXTERNAL_PORT}:${DASHBOARDOP_INTERNAL_PORT}
+      
+    environment:
+      - FLASK_ENV=${DASHBOARDOP_ENV}
+      - FLASK_RUN_PORT=${DASHBOARDOP_INTERNAL_PORT}
+      - FLASK_RUN_HOST=${DASHBOARDOP_HOST}
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_DEBUG=${FLASK_DEBUG}
+      - DASHBOARDOP_ENV=development
+      - DASHBOARDOP_HOST=${DASHBOARDOP_HOST}
+      - DASHBOARDOP_PORT=${DASHBOARDOP_INTERNAL_PORT}
+      - DASHBOARDOP_API_PREFIX=${DASHBOARDOP_API_PREFIX}
+      - POSTGRESQL_INTERNAL_HOST=${POSTGRESQL_INTERNAL_HOST}
+      - POSTGRESQL_INTERNAL_PORT=${POSTGRESQL_INTERNAL_PORT}
+      - POSTGRESQL_USERNAME=${POSTGRESQL_USERNAME}
+      - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DB=${POSTGRESQL_DB}
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRESQL_USERNAME}:${POSTGRESQL_PASSWORD}@${POSTGRESQL_INTERNAL_HOST}:${POSTGRESQL_INTERNAL_PORT}/${POSTGRESQL_DB}
+    develop:
+      watch:
+        - action: rebuild
+          path: ./app
+          ignore:
+            - __pycache__/
+    networks:
+     - dashboardop
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+  postgresql:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - dashboardop-postgresql-data:${POSTGRESQL_DATA}
+    environment:
+      - POSTGRESQL_INTERNAL_HOST=${POSTGRESQL_INTERNAL_HOST}
+      - POSTGRESQL_INTERNAL_PORT=${POSTGRESQL_INTERNAL_PORT}
+      - POSTGRES_USER=${POSTGRESQL_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRESQL_PASSWORD}
+      - POSTGRESQL_DB=${POSTGRESQL_DB}
+    ports:
+      - 5432:5432
+    networks:
+     - dashboardop
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_MAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PW}
+    ports:
+      - ${PGADMIN_EXTERNAL_PORT}:${PGADMIN_INTERNAL_PORT}
+    networks:
+     - dashboardop
+    restart: always
+volumes:
+  dashboardop-postgresql-data:
+networks:
+  dashboardop:
