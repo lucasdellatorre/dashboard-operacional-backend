@@ -1,1 +1,1 @@
-web: gunicorn -b 0.0.0.0 'app.server:create_app()'
+web: gunicorn 'app.server:create_app()'
