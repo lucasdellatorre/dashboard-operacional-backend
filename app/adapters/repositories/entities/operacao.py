@@ -8,6 +8,7 @@ class Operacao(db.Model):
     
     id = Column(Integer, primary_key=True, autoincrement="auto")
     nome = Column(String, nullable=True)
+    dataCriacao = Column("data_criacao", String, nullable=True)
     
     def __repr__(self):
         return f"Operacao(id={self.id} nome={self.nome}"
