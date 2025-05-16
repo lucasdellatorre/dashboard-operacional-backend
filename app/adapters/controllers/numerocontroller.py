@@ -11,12 +11,15 @@ class NumeroController(Resource):
         """
          Retorna a lista de números vinculados às operações informadas.
         ---
+        tags:
+          - Números
         parameters:
           - name: operacao_ids
             in: path
             type: string
             required: true
-            description: Lista de IDs de operação separados por vírgula (exemplo: 1,2,3)
+            description: |
+              Lista de IDs de operação separados por vírgula (exemplo: 1,2,3)
         responses:
           200:
             description: Lista de números vinculados às operações.
@@ -42,7 +45,6 @@ class NumeroController(Resource):
         except Exception as e:
             print(f'An error occurred: {e}')
             return {'message': 'Erro interno no servidor.'}, 500
-
 
 blueprint_numero = Blueprint('blueprint_numero', __name__)
 
