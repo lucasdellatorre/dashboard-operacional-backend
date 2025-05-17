@@ -1,11 +1,11 @@
 from flask import Blueprint
 from flask_restful import Api, Resource
-from app.application.usecases.listaoperacaousercase import ListarOperacoesUseCase
-from app.application.factories.listaoperacaofactory import ListaOperacaoFactory  
+from app.application.usecases.listanumerousercase import ListarNumeroUseCase
+from app.application.factories.listanumerofactory import ListaNumeroFactory  
 
 class NumeroController(Resource):
     def __init__(self, **kwargs):
-        self.lista_operacoes: ListarOperacoesUseCase = kwargs['lista_operacoes']
+        self.lista_numero: ListarNumeroUseCase = kwargs['lista_operacoes']
 
     def get(self, operacao_ids):
         """
@@ -35,7 +35,7 @@ class NumeroController(Resource):
             operacao_id_list = [int(op_id.strip()) for op_id in operacao_ids.split(',') if op_id.strip().isdigit()]
             if not operacao_id_list:
                 return {"message": "IDs de operação inválidos ou não fornecidos."}, 400
-            numeros = self.lista_operacoes.execute(operacao_id_list)
+            numeros = self.lista_numero.execute(operacao_id_list)
             if not numeros:
                 return {"message": "Nenhum dado encontrado para as operações informadas."}, 404
             return [numero.to_dict() for numero in numeros], 200
@@ -48,4 +48,4 @@ blueprint_numero = Blueprint('blueprint_numero', __name__)
 
 
 api = Api(blueprint_numero)
-api.add_resource(NumeroController,'/numeros/operacao/<string:operacao_ids>',resource_class_kwargs={'lista_operacoes': ListaOperacaoFactory.listar_operacoes()})
+api.add_resource(NumeroController,'/numeros/operacao/<string:operacao_ids>',resource_class_kwargs={'lista_operacoes': ListaNumeroFactory.listar_numero()})

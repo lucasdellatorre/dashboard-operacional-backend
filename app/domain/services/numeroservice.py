@@ -12,9 +12,9 @@ class NumeroService():
     def isAlvo(self, numero_id) -> bool:
         return self.repository.isAlvo(numero_id)
     
-    def listar_por_operacoes(self, operacao_ids: list[int]):
+    def listarNumeroOperacao(self, operacao_ids: list[int]):
     
-        dadosbase = self.repository.buscaOperacoes(operacao_ids)
+        dadosbase = self.repository.buscaNumero(operacao_ids)
         operacoes = self.repository.BuscarOperacoesNumero()
 
         operacoes_numero = defaultdict(set)

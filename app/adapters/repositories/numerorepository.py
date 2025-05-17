@@ -23,7 +23,7 @@ class NumeroRepository(INumeroRepository):
         result = self.session.query(ORMInterceptacaoNumero).filter(ORMInterceptacaoNumero.numeroId == int(numero_id), ORMInterceptacaoNumero.isAlvo == True).first()
         return result is not None
     
-    def buscaOperacoes(self, operacao_ids: list[int]) -> list[dict]:
+    def buscaNumero(self, operacao_ids: list[int]) -> list[dict]:
         query = (
             self.session.query(
                 Numero.id.label("id"),

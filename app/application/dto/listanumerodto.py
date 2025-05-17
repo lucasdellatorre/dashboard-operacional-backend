@@ -1,5 +1,5 @@
 from datetime import date, datetime
-class ListaOperacaoDTO:
+class ListaNumeroDTO:
     def __init__(self, id, numero, relevante, isAlvo, dataUpload, operacoes):
         self.id = id
         self.numero = numero
@@ -23,8 +23,8 @@ class ListaOperacaoDTO:
         }
 
     @staticmethod
-    def from_dict(row: dict) -> 'ListaOperacaoDTO':
-        return ListaOperacaoDTO(
+    def from_dict(row: dict) -> 'ListaNumeroDTO':
+        return ListaNumeroDTO(
             id=row["id"],
             numero=row["numero"],
             relevante=row["relevante"],

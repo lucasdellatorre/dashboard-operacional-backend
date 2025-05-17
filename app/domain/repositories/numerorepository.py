@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from app.domain.entities.numero import Numero as DomainNumero
-from app.application.dto.listaoperacaodto import ListaOperacaoDTO
+from app.application.dto.listanumerodto import ListaNumeroDTO
 from typing import List
 
 class INumeroRepository(ABC):
@@ -13,7 +13,7 @@ class INumeroRepository(ABC):
         raise (NotImplementedError)
     
     @abstractmethod
-    def buscaOperacoes(self, operacao_ids: List[int]) -> list[ListaOperacaoDTO]:
+    def buscaNumero(self, operacao_ids: List[int]) -> list[ListaNumeroDTO]:
        raise NotImplementedError()
 
     @abstractmethod
