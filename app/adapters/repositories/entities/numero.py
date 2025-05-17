@@ -8,7 +8,6 @@ class Numero(db.Model):
     
     id = Column(Integer, primary_key=True, autoincrement="auto")
     numero = Column(String, nullable=False)
-    internalTicketNumber = Column("internal_ticket_number", String, nullable=False)
     
     @staticmethod
     def fromNumeroEntidade(numeroEntidade: NumeroEntidade) -> "Numero":
