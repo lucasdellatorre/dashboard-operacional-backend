@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from app.domain.entities.numero import Numero as DomainNumero
+from app.application.dto.listanumerodto import ListaNumeroDTO
+from typing import List
 
 class INumeroRepository(ABC):
     @abstractmethod
@@ -9,3 +11,11 @@ class INumeroRepository(ABC):
     @abstractmethod
     def isAlvo(self, numero_id) -> bool:
         raise (NotImplementedError)
+    
+    @abstractmethod
+    def buscaNumero(self, operacao_ids: List[int]) -> list[ListaNumeroDTO]:
+       raise NotImplementedError()
+
+    @abstractmethod
+    def BuscarOperacoesNumero(self) -> list[dict]:
+        raise NotImplementedError()
