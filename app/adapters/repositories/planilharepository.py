@@ -14,7 +14,6 @@ from app.adapters.repositories.entities.interceptacao import Interceptacao
 from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero
 from app.adapters.repositories.entities.ip import IP
 
-
 class PlanilhaRepository:
     def __init__(self, session: Session = db.session):
         self.session = session
@@ -92,6 +91,9 @@ class PlanilhaRepository:
         planilha1, planilha2, planilha3, planilha4, planilha5 = sheets_df
         ticket = str(planilha2.iloc[0]['INTERNAL TICKET NUMBER'])
 
+        if self.session.query(Interceptacao).filter_by(internalTicketNumber=ticket).first():
+            raise ValueError(f'Ticket Number {ticket} already exists in the database')
+        
         interceptacao = self.session.query(Interceptacao).filter_by(internalTicketNumber=ticket).first()
         if not interceptacao:
             planilha = Planilha(nome=filename, size=file_size)

@@ -1,4 +1,3 @@
-from datetime import date
 class Operacao:
     def __init__(self, nome: str, dataCriacao: str , id = None):
         self.id = id

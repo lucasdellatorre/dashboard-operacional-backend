@@ -54,7 +54,7 @@ class OperacaoController(Resource):
         try:
             target_dto = OperacaoDTO(**args)
             target = self.create_operacao_use_case.execute(target_dto)
-            return {'Operacao': target.to_dict()}, 201
+            return target.to_dict(), 201
         except ValueError as ve:
             return {'Message': f'{ve}'}, 400
         except Exception as e:
@@ -89,7 +89,7 @@ class OperacaoController(Resource):
         """
         try:
             operacoes = self.get_all_operacao_use_case.execute()
-            return {'Operacao': [operacao.to_dict() for operacao in operacoes]}, 200
+            return [operacao.to_dict() for operacao in operacoes], 200
         except Exception as e:
             print(f'An error occurred: {e}')
             return {'Message': 'Internal Server Error'}, 500
