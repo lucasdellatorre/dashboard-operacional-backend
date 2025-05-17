@@ -1,118 +1,81 @@
-# from flask import Blueprint, jsonify
-# from flask_restful import Api, Resource, reqparse
-# from app.application.factories.suspeitofactory import SuspeitoFactory
-# from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
-# from app.application.dto.alvodto import AlvoDTO
-# from app.domain.services.alvoservice import AlvoService
+from flask import Blueprint
+from app.application.factories.suspeitofactory import SuspeitoFactory
+from flask_restful import Api, Resource
+from app.application.usecases.getsuspeitobyidusecase import GetSuspeitoByIdUseCase
 
-# class SuspeitoController(Resource):
-#     def __init__(self, **kwargs):
-#         self.create_alvo_use_case: CreateSuspeitoUseCase = kwargs['create_alvo_use_case']
-#         self.req_parser = reqparse.RequestParser()
+class SuspeitoController(Resource):
+    def __init__(self, **kwargs):
+        self.get_suspeito_by_id_use_case: GetSuspeitoByIdUseCase = kwargs['get_suspeito_by_id_use_case']
 
-#     def post(self):
-#         """
-#         Cria um novo alvo com base nas informações fornecidas.
-#         ---
-#         parameters:
-#           - in: body
-#             name: body
-#             required: true
-#             schema:
-#               type: object
-#               properties:
-#                 internalTicketNumber:
-#                   type: string
-#                   description: Número do ticket interno do alvo
-#                 descricao:
-#                   type: string
-#                   description: Descrição do alvo
-#                 nome:
-#                   type: string
-#                   description: Nome do alvo
-#                 cpf:
-#                   type: string
-#                   description: CPF do alvo
-#         responses:
-#           201:
-#             description: Alvo criado com sucesso
-#             schema:
-#               type: object
-#               properties:
-#                 Suspeito:
-#                   type: object
-#                   properties:
-#                     internalTicketNumber:
-#                       type: string
-#                       description: Número do ticket interno do alvo
-#                     descricao:
-#                       type: string
-#                     nome:
-#                       type: string
-#                     cpf:
-#                       type: string
-#           500:
-#             description: Erro interno do servidor
-#         """
-#         self.req_parser.add_argument('internalTicketNumber', required=True, location='json')
-#         self.req_parser.add_argument('descricao', required=True, location='json')
-#         self.req_parser.add_argument('nome', required=True, location='json')
-#         self.req_parser.add_argument('cpf', required=True, location='json')
-        
-#         args = self.req_parser.parse_args()
+    def get(self, id: int):
+        """
+        Retorna os dados detalhados de um suspeito por ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - name: id
+            in: path
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito encontrado
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nome:
+                      type: string
+                    apelido:
+                      type: string
+                    cpf:
+                      type: string
+                    relevante:
+                      type: boolean
+                    anotacoes:
+                      type: string
+                    emails:
+                      type: array
+                      items:
+                        type: string
+                    celulares:
+                      type: array
+                      items:
+                        type: string
+                    ips:
+                      type: array
+                      items:
+                        type: string
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno no servidor
+        """
+        try:
+            suspeito = self.get_suspeito_by_id_use_case.execute(id)
+            if suspeito is None:
+                return {"message": "Suspeito não encontrado"}, 404
 
-#         try:
-#             suspeito_dto = AlvoDTO(**args)
-#             suspeito = self.create_alvo_use_case.execute(suspeito_dto)
-#             return {'Suspeito': suspeito.to_dict()}, 201
-#         except Exception as e:
-#             print(f'An error occurred: {e}')
-#             return {'Message': 'Internal Server Error'}, 500
-          
-#     def get(self):
-#         """
-#         Retorna a lista de alvos ordenados por Internal Ticket Number.
-#         ---
-#         tags:
-#           - Alvo
-#         responses:
-#           200:
-#             description: Lista de alvos
-#             schema:
-#               type: object
-#               properties:
-#                 Suspeitos:
-#                   type: array
-#                   items:
-#                     type: object
-#                     properties:
-#                       internalTicketNumber:
-#                         type: string
-#                         description: Número do ticket interno do alvo
-#                       descricao:
-#                         type: string
-#                       nome:
-#                         type: string
-#                       cpf:
-#                         type: string
-#           500:
-#             description: Erro interno do servidor
-#         """
-#         try:
-#             alvo_service = AlvoService()
-#             alvos = alvo_service.list_alvos()
-#             return jsonify({'Suspeitos': [alvo.to_dict() for alvo in alvos]}), 200
-#         except Exception as e:
-#             print(f'An error occurred: {e}')
-#             return jsonify({'Message': 'Internal Server Error'}), 500
+            return suspeito.to_dict(), 200
 
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
 
-# # Blueprint e API registration
-# blueprint_alvo = Blueprint('blueprint_alvo', __name__)
-# api = Api(blueprint_alvo)
+# Blueprint e registro
+blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
+api = Api(blueprint_suspeito)
 
-# api.add_resource(
-#     SuspeitoController,
-#     '/suspeito',
-#     resource_class_kwargs={'create_alvo_use_case': SuspeitoFactory.create_suspeito()}
-# )
+api.add_resource(
+    SuspeitoController,
+    '/suspeito/<int:id>',
+    resource_class_kwargs={
+        'get_suspeito_by_id_use_case': SuspeitoFactory.get_suspeito_by_id()
+    }
+)
