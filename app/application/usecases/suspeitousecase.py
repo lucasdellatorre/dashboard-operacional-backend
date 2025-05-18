@@ -7,4 +7,5 @@ class SuspeitoUseCase:
 
     def atualizar_suspeito(self, id, data):
         dto = SuspeitoUpdateDTO(**data)
-        return self.service.atualizar_suspeito(id, dto.to_dict())
+        entidade = self.service.atualizar_suspeito(id, dto.to_dict())
+        return SuspeitoUpdateDTO.fromEntity(entidade).to_dict()

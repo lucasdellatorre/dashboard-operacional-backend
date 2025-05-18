@@ -26,13 +26,16 @@ class Suspeito(db.Model):
         """Converts an ORM model instance to a domain entity."""
         return SuspeitoEntidade(**Suspeito)
     
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "internal_ticket_number": self.internalTicketNumber,
-            "nome": self.nome,
-            "cpf": self.cpf,
-            "apelido": self.apelido,
-            "anotacoes": self.anotacoes,
-            "relevante": self.relevante
-        }
+    @staticmethod
+    def toEntity(suspeito: "Suspeito") -> SuspeitoEntidade:
+        return SuspeitoEntidade(
+        id=suspeito.id,
+        internalTicketNumber=suspeito.internalTicketNumber,
+        nome=suspeito.nome,
+        cpf=suspeito.cpf,
+        anotacoes=suspeito.anotacoes,
+        apelido=suspeito.apelido,
+        relevante=suspeito.relevante,
+        lastUpdateDate=suspeito.lastUpdateDate,
+        lastUpdateCpf=suspeito.lastupdateCpf
+    )
