@@ -1,13 +1,16 @@
-# from flask import Blueprint, jsonify
-# from flask_restful import Api, Resource, reqparse
+from flask import Blueprint, jsonify, request
+from flask_restful import Api, Resource, reqparse
 # from app.application.factories.suspeitofactory import SuspeitoFactory
 # from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
 # from app.application.dto.alvodto import AlvoDTO
 # from app.domain.services.alvoservice import AlvoService
+from app.application.usecases.suspeitousecase import SuspeitoUseCase
+from app.application.factories.suspeitofactory import SuspeitoFactory
 
-# class SuspeitoController(Resource):
-#     def __init__(self, **kwargs):
-#         self.create_alvo_use_case: CreateSuspeitoUseCase = kwargs['create_alvo_use_case']
+class SuspeitoController(Resource):
+     def __init__(self, **kwargs):
+        self.atualizar_suspeito:SuspeitoUseCase = kwargs["atualizar_suspeito"]
+    #         self.create_alvo_use_case: CreateSuspeitoUseCase = kwargs['create_alvo_use_case']
 #         self.req_parser = reqparse.RequestParser()
 
 #     def post(self):
@@ -69,7 +72,7 @@
 #             print(f'An error occurred: {e}')
 #             return {'Message': 'Internal Server Error'}, 500
           
-#     def get(self):
+#       def get(self):
 #         """
 #         Retorna a lista de alvos ordenados por Internal Ticket Number.
 #         ---
@@ -107,12 +110,35 @@
 #             return jsonify({'Message': 'Internal Server Error'}), 500
 
 
-# # Blueprint e API registration
-# blueprint_alvo = Blueprint('blueprint_alvo', __name__)
-# api = Api(blueprint_alvo)
+     def put(self, id):
+        """
+        Atualiza os dados de um suspeito.
+        ---
+        Parâmetros:
+          - id (path): ID do suspeito
+          - JSON no corpo: Campos que podem ser atualizados (nome, cpf, apelido, anotacoes, relevante)
 
-# api.add_resource(
-#     SuspeitoController,
-#     '/suspeito',
-#     resource_class_kwargs={'create_alvo_use_case': SuspeitoFactory.create_suspeito()}
-# )
+        Respostas:
+          - 200: Suspeito atualizado com sucesso
+          - 400: Dados inválidos
+          - 404: Suspeito não encontrado
+          - 500: Erro interno
+        """
+        data = request.get_json(force=True)
+        try:
+            suspeito_atualizado = self.atualizar_suspeito.atualizar_suspeito(id, data)
+            return suspeito_atualizado, 200
+        except ValueError as e:
+            return {"error": str(e)}, 400
+        except LookupError:
+            return {"error": "Suspeito não encontrado."}, 404
+        except Exception as e:
+            return {"error": "Erro interno."}, 500
+
+
+# # Blueprint e API registration
+blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
+api = Api(blueprint_suspeito)
+
+api.add_resource(SuspeitoController,'/suspeito/<int:id>',resource_class_kwargs={'atualizar_suspeito': SuspeitoFactory.atualizar_suspeito()})
+#api.add_resource(SuspeitoController,'/suspeito',resource_class_kwargs={'create_alvo_use_case': SuspeitoFactory.create_suspeito()})
