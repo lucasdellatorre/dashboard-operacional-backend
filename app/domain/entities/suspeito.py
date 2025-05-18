@@ -1,3 +1,6 @@
+from app.domain.entities.numerosuspeito import NumeroSuspeito
+from app.domain.entities.suspeitoemail import SuspeitoEmail
+
 class Suspeito:
     def __init__(
         self,
@@ -10,6 +13,8 @@ class Suspeito:
         relevante: bool = None,
         lastUpdateDate: str = None,
         lastUpdateCpf: str = None,
+        emails: list[SuspeitoEmail] = None,
+        numerosuspeito: list[NumeroSuspeito] = None,
     ):
         self.id = id
         self.internalTicketNumber = internalTicketNumber
@@ -20,3 +25,5 @@ class Suspeito:
         self.relevante = relevante
         self.lastUpdateDate = lastUpdateDate
         self.lastUpdateCpf = lastUpdateCpf
+        self.emails = emails or []
+        self.numerosuspeito = numerosuspeito or []
