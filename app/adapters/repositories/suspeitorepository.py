@@ -77,3 +77,54 @@ class SuspeitoRepository(ISuspeitoRepository):
             emails=emails,
             numerosuspeito=numeros
         )
+    
+    def get_by_numero_id_with_relations(self, numero_id: int) -> SuspeitoEntity | None:
+        numero_suspeito = (
+            db.session.query(ORMNumeroSuspeito)
+            .filter(ORMNumeroSuspeito.numeroId == numero_id)
+            .first()
+        )
+
+        if not numero_suspeito:
+            return None
+
+        suspeito = (
+            db.session.query(ORMSuspeito)
+            .options(
+                joinedload(ORMSuspeito.numero_suspeitos)
+                .joinedload(ORMNumeroSuspeito.numero)
+            )
+            .filter(ORMSuspeito.id == numero_suspeito.suspeitoId)
+            .first()
+        )
+
+        if not suspeito:
+            return None
+
+        numeros = [
+            NumeroSuspeitoEntity(
+                numero=NumeroEntity(
+                    id=ns.numero.id,
+                    numero=ns.numero.numero,
+                    internalTicketNumber=None,
+                    ips=[]
+                ),
+                lastUpdateCpf=None,
+                lastUpdateDate=None
+            )
+            for ns in suspeito.numero_suspeitos
+        ]
+
+        return SuspeitoEntity(
+            id=suspeito.id,
+            internalTicketNumber=None,
+            nome=None,
+            apelido=suspeito.apelido,
+            cpf=None,
+            relevante=None,
+            anotacoes=None,
+            lastUpdateDate=None,
+            lastUpdateCpf=None,
+            emails=[],
+            numerosuspeito=numeros
+        )

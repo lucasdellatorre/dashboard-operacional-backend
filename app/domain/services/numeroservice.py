@@ -32,3 +32,6 @@ class NumeroService():
                 numeros_unicos[numero] = item
 
         return list(numeros_unicos.values())
+    
+    def listar_numeros(self) -> list[Numero]:
+        return self.repository.listar_todos()
