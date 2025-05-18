@@ -57,3 +57,15 @@ class NumeroRepository(INumeroRepository):
     )
 
         return [dict(row._mapping) for row in query.all()]
+    
+    def listar_todos(self) -> list[dict]:
+        query = (
+            self.session.query(
+                ORMNumero.id.label("id"),
+                ORMNumero.numero.label("numero")
+            )
+            .join(ORMInterceptacaoNumero, ORMInterceptacaoNumero.numeroId == ORMNumero.id)
+            .distinct(ORMNumero.id)
+        )
+        resultados = query.all()
+        return [dict(row._mapping) for row in resultados]

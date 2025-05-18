@@ -9,7 +9,6 @@ class Numero(db.Model):
     
     id = Column(Integer, primary_key=True, autoincrement="auto")
     numero = Column(String, nullable=False)
-    internalTicketNumber = Column("internal_ticket_number", String, nullable=False)
     ips = relationship("IP", backref="numero", lazy="joined") 
     
     @staticmethod
@@ -20,4 +19,4 @@ class Numero(db.Model):
     @staticmethod
     def toNumeroEntidade(numero: "Numero") -> NumeroEntidade:
         """Converts an ORM model instance to a domain entity."""
-        return NumeroEntidade(id=numero.id, numero=numero.numero, internalTicketNumber=numero.internalTicketNumber)
+        return NumeroEntidade(id=numero.id, numero=numero.numero)

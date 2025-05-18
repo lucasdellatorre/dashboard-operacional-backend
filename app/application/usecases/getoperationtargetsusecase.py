@@ -1,7 +1,7 @@
 from app.domain.services.numeroservice import NumeroService
 from app.application.dto.listanumerodto import ListaNumeroDTO
 
-class ListarNumeroUseCase:
+class GetOperationTargetsUseCase:
     def __init__(self, numero_service: NumeroService):
         self.numero_service = numero_service
 

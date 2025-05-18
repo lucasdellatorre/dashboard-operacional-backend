@@ -19,3 +19,8 @@ class INumeroRepository(ABC):
     @abstractmethod
     def BuscarOperacoesNumero(self) -> list[dict]:
         raise NotImplementedError()
+    
+    @abstractmethod
+    def listar_todos(self) -> list[DomainNumero]:
+        """Retorna todos os números presentes na tabela interceptacoes_numeros, com seus respectivos valores."""
+        raise NotImplementedError()
