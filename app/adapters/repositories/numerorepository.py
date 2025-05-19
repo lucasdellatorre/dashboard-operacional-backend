@@ -6,6 +6,7 @@ from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero as ORMInterceptacaoNumero
 from app.infraestructure.database.db import db
 from app.adapters.repositories.entities.numero import Numero
+from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito
 from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero
 from app.adapters.repositories.entities.interceptacao import Interceptacao
 from app.adapters.repositories.entities.planilha import Planilha
@@ -69,3 +70,32 @@ class NumeroRepository(INumeroRepository):
         )
         resultados = query.all()
         return [dict(row._mapping) for row in resultados]
+
+    def listar_com_suspeitos(self) -> list[dict]:
+        from app.adapters.repositories.entities.suspeito import Suspeito  # certifique-se de importar corretamente
+
+        query = (
+            self.session.query(
+                Numero.id.label("id"),
+                Numero.numero.label("numero"),
+                Suspeito.apelido.label("apelido"),
+                (Suspeito.id != None).label("suspeito")
+            )
+            .outerjoin(NumeroSuspeito, Numero.id == NumeroSuspeito.numeroId)
+            .outerjoin(Suspeito, Suspeito.id == NumeroSuspeito.suspeitoId)
+            .distinct(Numero.id)
+        )
+
+        return [dict(row._mapping) for row in query.all()]
+
+    def get_all_by_ids(self, numero_ids: list[int]) -> list[DomainNumero]:
+        if not numero_ids:
+            return []
+
+        resultados = (
+            self.session.query(ORMNumero)
+            .filter(ORMNumero.id.in_(numero_ids))
+            .all()
+        )
+
+        return [ORMNumero.toNumeroEntidade(numero) for numero in resultados]

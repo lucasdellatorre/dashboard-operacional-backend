@@ -1,3 +1,5 @@
+from collections import Counter
+
 class SuspeitoDetalhadoDTO:
     def __init__(
         self,
@@ -36,8 +38,19 @@ class SuspeitoDetalhadoDTO:
 
     @staticmethod
     def from_entity(entity):
+        # coleta todos os IPs
+        all_ips = [
+            ip.ip
+            for numero_suspeito in getattr(entity, 'numerosuspeito', [])
+            for ip in getattr(numero_suspeito.numero, 'ips', [])
+        ]
+
+        # conta ocorrências
+        ip_counter = Counter(all_ips)
+        ips_agrupados = [{"ip": ip, "ocorrencias": count} for ip, count in ip_counter.items()]
+
         return SuspeitoDetalhadoDTO(
-            id=entity.id,   
+            id=entity.id,
             nome=entity.nome,
             apelido=entity.apelido,
             cpf=entity.cpf,
@@ -59,9 +72,5 @@ class SuspeitoDetalhadoDTO:
                 }
                 for numero_suspeito in getattr(entity, 'numerosuspeito', [])
             ],
-            ips=[
-                ip.ip
-                for numero_suspeito in getattr(entity, 'numerosuspeito', [])
-                for ip in getattr(numero_suspeito.numero, 'ips', [])
-            ]
+            ips=ips_agrupados
         )

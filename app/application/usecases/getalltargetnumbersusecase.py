@@ -24,7 +24,6 @@ class GetAllTargetNumbersUseCase:
                 for row in data
             ]
 
-        # Caso não queira os suspeitos, método simples e eficiente
         numeros_interceptados = self.interceptacao_numero_service.get_all_numeros()
         return [
             NumeroSimplesDTO(

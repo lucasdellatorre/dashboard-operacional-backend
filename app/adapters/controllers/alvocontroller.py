@@ -52,7 +52,7 @@ class AlvoController(Resource):
             alvos = self.get_all_alvos.execute(show_suspects)
             response = [a.to_dict() for a in alvos]
             return response, 200
-
+  
         except Exception as e:
             print(f'[ERRO /alvos]: {e}')
             return {'message': 'Erro interno no servidor.'}, 500
