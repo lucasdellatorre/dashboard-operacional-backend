@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from app.domain.entities.suspeito import Suspeito
 
+
 class ISuspeitoRepository(ABC):
 
     @abstractmethod
@@ -13,5 +14,18 @@ class ISuspeitoRepository(ABC):
         """
         Busca o suspeito relacionado a um número (se existir),
         incluindo os números vinculados a esse suspeito.
+        """
+        pass
+
+    @abstractmethod
+    def get_by_apelido(self, apelido: str) -> Suspeito | None:
+        """Retorna um suspeito com o apelido exato, se existir."""
+        pass
+
+    @abstractmethod
+    def create(self, suspeito: Suspeito) -> Suspeito:
+        """
+        Cria e persiste um novo suspeito.
+        Deve retornar o objeto com ID preenchido após a inserção.
         """
         pass

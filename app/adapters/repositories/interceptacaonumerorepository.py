@@ -12,62 +12,56 @@ class InterceptacaoNumeroRepository(IInterceptacaoNumeroRepository):
         self.session = session
 
     def listar_numeros_com_suspeito(self) -> list[dict]:
-        subquery = (
+        query_suspeitos = (
             self.session.query(
-                NumeroSuspeito.numeroId.label("numero_id"),
                 Suspeito.id.label("suspeito_id"),
-                Suspeito.apelido.label("apelido")
+                Suspeito.apelido.label("apelido"),
+                Numero.id.label("numero_id"),
+                Numero.numero.label("numero_valor")
             )
-            .join(Suspeito, Suspeito.id == NumeroSuspeito.suspeitoId)
-            .subquery()
+            .join(NumeroSuspeito, Suspeito.id == NumeroSuspeito.suspeitoId)
+            .join(Numero, Numero.id == NumeroSuspeito.numeroId)
+            .distinct(Suspeito.id, Numero.id)
         )
 
-        query = (
-            self.session.query(
-                InterceptacaoNumero.numeroId.label("numero_id"),
-                Numero.numero.label("numero_valor"),
-                subquery.c.apelido,
-                subquery.c.suspeito_id,
-                Numero.id.label("numero_id_real")  # redundante, mas claro
-            )
-            .join(Numero, Numero.id == InterceptacaoNumero.numeroId)
-            .outerjoin(subquery, InterceptacaoNumero.numeroId == subquery.c.numero_id)
-            .filter(InterceptacaoNumero.isAlvo == True)
-            .distinct(InterceptacaoNumero.numeroId)
-        )
-
-        rows = query.all()
-
-        resultados: list[dict] = []
         suspeitos_map: dict[int, dict] = {}
-        anonimos: list[dict] = []
-
-        for row in rows:
-            if row.suspeito_id:
-                if row.suspeito_id not in suspeitos_map:
-                    suspeitos_map[row.suspeito_id] = {
-                        "id": row.suspeito_id,
-                        "value": row.apelido,
-                        "suspect": True,
-                        "numeros": []
-                    }
-
-                suspeitos_map[row.suspeito_id]["numeros"].append({
-                    "id": row.numero_id_real,
-                    "numero": row.numero_valor
-                })
-
-            else:
-                anonimos.append({
-                    "id": row.numero_id_real,
-                    "value": row.numero_valor,
-                    "suspect": False,
+        for row in query_suspeitos.all():
+            if row.suspeito_id not in suspeitos_map:
+                suspeitos_map[row.suspeito_id] = {
+                    "id": row.suspeito_id,
+                    "value": row.apelido,
+                    "suspect": True,
                     "numeros": []
-                })
+                }
+            suspeitos_map[row.suspeito_id]["numeros"].append({
+                "id": row.numero_id,
+                "numero": row.numero_valor
+            })
 
-        resultados.extend(suspeitos_map.values())
-        resultados.extend(anonimos)
-        return resultados
+        query_anonimos = (
+            self.session.query(
+                Numero.id.label("id"),
+                Numero.numero.label("numero")
+            )
+            .join(InterceptacaoNumero, InterceptacaoNumero.numeroId == Numero.id)
+            .filter(InterceptacaoNumero.isAlvo == True)
+            .filter(~Numero.id.in_(
+                self.session.query(NumeroSuspeito.numeroId)
+            ))
+            .distinct(Numero.id)
+        )
+
+        anonimos = [
+            {
+                "id": row.id,
+                "value": row.numero,
+                "suspect": False,
+                "numeros": []
+            }
+            for row in query_anonimos.all()
+        ]
+
+        return list(suspeitos_map.values()) + anonimos
 
 
     def get_all_alvos(self) -> list[dict]:

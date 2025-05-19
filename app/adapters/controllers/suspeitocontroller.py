@@ -1,81 +1,120 @@
-from flask import Blueprint
-from app.application.factories.suspeitofactory import SuspeitoFactory
+from flask import request, Blueprint
 from flask_restful import Api, Resource
-from app.application.usecases.getsuspeitobyidusecase import GetSuspeitoByIdUseCase
+from app.application.factories.suspeitofactory import SuspeitoFactory
+from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 
-class SuspeitoController(Resource):
+# --- POST controller ---
+class SuspeitoCreateController(Resource):
     def __init__(self, **kwargs):
-        self.get_suspeito_by_id_use_case: GetSuspeitoByIdUseCase = kwargs['get_suspeito_by_id_use_case']
+        self.create_suspeito_use_case = kwargs['create_suspeito_use_case']
 
-    def get(self, id: int):
+    def post(self):
         """
-        Retorna os dados detalhados de um suspeito por ID.
+        Cria um novo suspeito.
         ---
         tags:
           - Suspeito
         parameters:
-          - name: id
-            in: path
+          - name: body
+            in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - apelido
+                - numeros_ids
+              properties:
+                apelido:
+                  type: string
+                nome:
+                  type: string
+                cpf:
+                  type: string
+                numeros_ids:
+                  type: array
+                  items:
+                    type: integer
+          - name: cpfUsuario
+            in: header
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          201:
+            description: Suspeito criado com sucesso
+          400:
+            description: Erro de validação
+          500:
+            description: Erro interno
+        """
+        data = request.get_json()
+        cpf_usuario = request.headers.get("cpfUsuario")
+
+        if not cpf_usuario:
+            return {"message": "Cabeçalho 'cpfUsuario' é obrigatório."}, 400
+
+        try:
+            dto = CreateSuspeitoDTO.from_dict(data)
+            dto.lastUpdateCpf = cpf_usuario  # ← atribui o CPF do usuário que criou
+            result = self.create_suspeito_use_case.execute(dto)
+            return result.to_dict(), 201
+        except ValueError as e:
+            return {"message": str(e)}, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+
+
+class SuspeitoDetailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_suspeito_by_id_use_case = kwargs['get_suspeito_by_id_use_case']
+
+    def get(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
             required: true
             schema:
               type: integer
             description: ID do suspeito
         responses:
           200:
-            description: Suspeito encontrado
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                    nome:
-                      type: string
-                    apelido:
-                      type: string
-                    cpf:
-                      type: string
-                    relevante:
-                      type: boolean
-                    anotacoes:
-                      type: string
-                    emails:
-                      type: array
-                      items:
-                        type: string
-                    celulares:
-                      type: array
-                      items:
-                        type: string
-                    ips:
-                      type: array
-                      items:
-                        type: string
+            description: Suspeito encontrado com sucesso
           404:
             description: Suspeito não encontrado
           500:
-            description: Erro interno no servidor
+            description: Erro interno
         """
         try:
             suspeito = self.get_suspeito_by_id_use_case.execute(id)
-            if suspeito is None:
+            if not suspeito:
                 return {"message": "Suspeito não encontrado"}, 404
-
             return suspeito.to_dict(), 200
-
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
 
-# Blueprint e registro
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
 api = Api(blueprint_suspeito)
 
 api.add_resource(
-    SuspeitoController,
-    '/suspeito/<int:id>',
+    SuspeitoCreateController,
+    "/suspeito",
     resource_class_kwargs={
-        'get_suspeito_by_id_use_case': SuspeitoFactory.get_suspeito_by_id()
+        "create_suspeito_use_case": SuspeitoFactory.create_suspeito()
+    }
+)
+
+api.add_resource(
+    SuspeitoDetailController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
     }
 )

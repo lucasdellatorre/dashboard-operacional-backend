@@ -5,9 +5,7 @@ from app.domain.entities.suspeito import Suspeito as SuspeitoEntidade
 
 class Suspeito(db.Model):
     __tablename__ = "suspeitos"
-
     id = Column(Integer, primary_key=True, autoincrement="auto")
-    internalTicketNumber = Column("internal_ticket_number", String, nullable=False)
     nome = Column(String(255), nullable=True)
     cpf = Column(CHAR(11), nullable=True)
     anotacoes = Column(Text, nullable=True)
