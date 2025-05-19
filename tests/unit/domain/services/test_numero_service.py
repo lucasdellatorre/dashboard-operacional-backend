@@ -7,7 +7,7 @@ def test_find_returns_numero():
     # Arrange
     mock_repo = Mock()
     numero_id = 123
-    expected_numero = Numero(id=numero_id, numero="5555", internalTicketNumber="ABC123")
+    expected_numero = Numero(id=numero_id, numero="5555")
     mock_repo.find.return_value = expected_numero
     service = NumeroService(mock_repo)
 

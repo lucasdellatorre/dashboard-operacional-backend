@@ -10,7 +10,7 @@ class FakeMensagem:
 def test_count_mensagens_por_alvo_correctly_counts_messages():
     # Arrange
     mock_repo = Mock()
-    numero = Numero(id=1, numero="5555", internalTicketNumber="XYZ789")
+    numero = Numero(id=1, numero="5555")
     mensagens = [
         FakeMensagem(remetente="5555", destinatario="1234"),  # 5555 -> 1234
         FakeMensagem(remetente="5555", destinatario="1234"),  # 5555 -> 1234
