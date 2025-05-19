@@ -66,7 +66,6 @@ def test_create_operacao_returns_operacao():
     assert result.dataCriacao == dataCriacao
 
 
-
 def test_find_by_name_returns_true():
     # Arrange
     mock_repo = Mock()
