@@ -17,35 +17,6 @@ class IPController(Resource):
         responses:
           200:
             description: Lista de IPs por ordem de acesso
-            schema:
-              type: object
-              properties:
-                IPs:
-                  type: String
-                  items:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                        description: ID do IP
-                      internalTicketNumber:
-                        type: String
-                        description: Internal Ticket Number
-                      ip:
-                        type: String
-                        description: IP
-                      versao:
-                        type: String
-                        description: Versao atual do IP 
-                      timestamp:
-                        type: TIMESTAMP
-                        description: Timestamp do IP
-                      data:
-                        type: DATE
-                        description: Data de acesso ao IP 
-                      hora:
-                        type: TIME
-                        description: Hora de acesso ao IP
           500:
             description: Erro interno do servidor
         """

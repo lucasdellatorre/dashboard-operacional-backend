@@ -1,10 +1,10 @@
-from app.application.usecases.getallnumbersusecase import GetAllNumbersUseCase
+from app.application.usecases.getoperationtargetsusecase import GetOperationTargetsUseCase
 from app.domain.services.numeroservice import NumeroService
 from app.adapters.repositories.numerorepository import NumeroRepository
 
-class ListaNumerosFactory:
+class ListaAlvosOperacaoFactory:
     @staticmethod
-    def listar() -> GetAllNumbersUseCase:
+    def listar() -> GetOperationTargetsUseCase:
         repository = NumeroRepository()
         service = NumeroService(repository)
-        return GetAllNumbersUseCase(service)
+        return GetOperationTargetsUseCase(service)
