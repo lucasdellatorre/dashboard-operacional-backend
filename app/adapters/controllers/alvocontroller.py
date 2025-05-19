@@ -1,118 +1,74 @@
-from flask import Blueprint, jsonify
-from flask_restful import Api, Resource, reqparse
-from app.application.factories.targetfactory import TargetFactory
-from app.application.usecases.createtargetusecase import CreateTargetUseCase
-from app.application.dto.alvodto import AlvoDTO
-from app.domain.services.alvoservice import AlvoService
+from flask import Blueprint, request
+from flask_restful import Api, Resource
+from app.application.usecases.getalltargetnumbersusecase import GetAllTargetNumbersUseCase
+from app.application.factories.listaalvossimplesfactory import ListaAlvosSimplesFactory
+import time
 
-class TargetController(Resource):
+class AlvoController(Resource):
     def __init__(self, **kwargs):
-        self.create_alvo_use_case: CreateTargetUseCase = kwargs['create_alvo_use_case']
-        self.req_parser = reqparse.RequestParser()
+        self.get_all_alvos: GetAllTargetNumbersUseCase = kwargs['get_all_alvos']
 
-    def post(self):
-        """
-        Cria um novo alvo com base nas informações fornecidas.
-        ---
-        parameters:
-          - in: body
-            name: body
-            required: true
-            schema:
-              type: object
-              properties:
-                internalTicketNumber:
-                  type: string
-                  description: Número do ticket interno do alvo
-                descricao:
-                  type: string
-                  description: Descrição do alvo
-                nome:
-                  type: string
-                  description: Nome do alvo
-                cpf:
-                  type: string
-                  description: CPF do alvo
-        responses:
-          201:
-            description: Alvo criado com sucesso
-            schema:
-              type: object
-              properties:
-                Target:
-                  type: object
-                  properties:
-                    internalTicketNumber:
-                      type: string
-                      description: Número do ticket interno do alvo
-                    descricao:
-                      type: string
-                    nome:
-                      type: string
-                    cpf:
-                      type: string
-          500:
-            description: Erro interno do servidor
-        """
-        self.req_parser.add_argument('internalTicketNumber', required=True, location='json')
-        self.req_parser.add_argument('descricao', required=True, location='json')
-        self.req_parser.add_argument('nome', required=True, location='json')
-        self.req_parser.add_argument('cpf', required=True, location='json')
-        
-        args = self.req_parser.parse_args()
-
-        try:
-            target_dto = AlvoDTO(**args)
-            target = self.create_alvo_use_case.execute(target_dto)
-            return {'Target': target.to_dict()}, 201
-        except Exception as e:
-            print(f'An error occurred: {e}')
-            return {'Message': 'Internal Server Error'}, 500
-          
     def get(self):
         """
-        Retorna a lista de alvos ordenados por Internal Ticket Number.
+        Retorna todos os números marcados como alvo.
+        Se showSuspects=true, substitui o número pelo apelido do suspeito (se houver) e lista os números vinculados.
         ---
         tags:
-          - Alvo
+          - Alvos
+        parameters:
+          - name: showSuspects
+            in: query
+            required: false
+            schema:
+              type: boolean
+            default: false
+            description: Se verdadeiro, usa o apelido do suspeito e os números relacionados a ele.
         responses:
           200:
-            description: Lista de alvos
-            schema:
-              type: object
-              properties:
-                Targets:
+            description: Lista de alvos.
+            content:
+              application/json:
+                schema:
                   type: array
                   items:
                     type: object
                     properties:
-                      internalTicketNumber:
+                      id:
+                        type: integer
+                      value:
                         type: string
-                        description: Número do ticket interno do alvo
-                      descricao:
-                        type: string
-                      nome:
-                        type: string
-                      cpf:
-                        type: string
+                      suspect:
+                        type: boolean
+                      numeros:
+                        type: array
+                        items:
+                          type: string
           500:
-            description: Erro interno do servidor
+            description: Erro interno no servidor
         """
+        start_time = time.time()
         try:
-            alvo_service = AlvoService()
-            alvos = alvo_service.list_alvos()
-            return jsonify({'Targets': [alvo.to_dict() for alvo in alvos]}), 200
+            show_suspects = request.args.get("showSuspects", "false").lower() in ("true", "1")
+            alvos = self.get_all_alvos.execute(show_suspects)
+            response = [a.to_dict() for a in alvos]
+            return response, 200
+  
         except Exception as e:
-            print(f'An error occurred: {e}')
-            return jsonify({'Message': 'Internal Server Error'}), 500
+            print(f'[ERRO /alvos]: {e}')
+            return {'message': 'Erro interno no servidor.'}, 500
 
+        finally:
+            duration_ms = (time.time() - start_time) * 1000
+            print(f'[INFO /alvos] Tempo de execução: {duration_ms:.2f} ms')
 
-# Blueprint e API registration
+# Blueprint e rota
 blueprint_alvo = Blueprint('blueprint_alvo', __name__)
 api = Api(blueprint_alvo)
 
 api.add_resource(
-    TargetController,
-    '/target',
-    resource_class_kwargs={'create_alvo_use_case': TargetFactory.create_target()}
+    AlvoController,
+    '/alvos',
+    resource_class_kwargs={
+        'get_all_alvos': ListaAlvosSimplesFactory.listar()
+    }
 )

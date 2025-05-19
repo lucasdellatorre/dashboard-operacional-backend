@@ -14,7 +14,6 @@ from app.adapters.repositories.entities.interceptacao import Interceptacao
 from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero
 from app.adapters.repositories.entities.ip import IP
 
-
 class PlanilhaRepository:
     def __init__(self, session: Session = db.session):
         self.session = session
@@ -27,13 +26,23 @@ class PlanilhaRepository:
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
         
-    def get_or_create_numero(self, numero, ticket, cache):
+    def get_or_create_numero(self, numero, cache):
         numero_str = str(numero)
-        if numero_str not in cache:
-            obj = Numero(numero=numero_str, internalTicketNumber=ticket)
+        
+        if numero_str in cache:
+            return cache[numero_str]
+        
+        obj = self.session.query(Numero).filter_by(numero=numero_str).first()
+        
+        if obj is None:
+            obj = Numero(numero=numero_str)
             self.session.add(obj)
             self.session.flush()
             cache[numero_str] = obj
+        
+        else:
+            cache[numero_str] = obj
+
         return cache[numero_str]
 
     def get_or_create_interceptacao_numero(self, numero_obj, interceptacao, is_alvo, cache):
@@ -92,6 +101,9 @@ class PlanilhaRepository:
         planilha1, planilha2, planilha3, planilha4, planilha5 = sheets_df
         ticket = str(planilha2.iloc[0]['INTERNAL TICKET NUMBER'])
 
+        if self.session.query(Interceptacao).filter_by(internalTicketNumber=ticket).first():
+            raise ValueError(f'Ticket Number {ticket} already exists in the database')
+        
         interceptacao = self.session.query(Interceptacao).filter_by(internalTicketNumber=ticket).first()
         if not interceptacao:
             planilha = Planilha(nome=filename, size=file_size)
@@ -115,7 +127,7 @@ class PlanilhaRepository:
 
     def process_planilha1(self, df, ticket, interceptacao, numeros_cache, interceptacao_cache):
         for _, row in df.iterrows():
-            alvo = self.get_or_create_numero(row['ALVO'], ticket, numeros_cache)
+            alvo = self.get_or_create_numero(row['ALVO'], numeros_cache)
             self.get_or_update_interceptacao_numero(alvo, numeros_cache)
             self.get_or_create_interceptacao_numero(alvo, interceptacao, True, interceptacao_cache)
 
@@ -127,9 +139,9 @@ class PlanilhaRepository:
 
     def process_planilha2(self, df, ticket, interceptacao, numeros_cache, interceptacao_cache):
         for _, row in df.iterrows():
-            alvo = self.get_or_create_numero(row['ALVO'], ticket, numeros_cache)
+            alvo = self.get_or_create_numero(row['ALVO'], numeros_cache)
             self.get_or_update_interceptacao_numero(alvo, numeros_cache)
-            sender = self.get_or_create_numero(row['SENDER'], ticket, numeros_cache)
+            sender = self.get_or_create_numero(row['SENDER'], numeros_cache)
             self.get_or_create_interceptacao_numero(alvo, interceptacao, True, interceptacao_cache)
             self.get_or_create_interceptacao_numero(sender, interceptacao, row['SENDER'] == row['ALVO'], interceptacao_cache)
 
@@ -141,7 +153,7 @@ class PlanilhaRepository:
             
             if recipients and recipients != ['']:
                 for recipient_num in recipients:
-                    recipient = self.get_or_create_numero(recipient_num, ticket, numeros_cache)
+                    recipient = self.get_or_create_numero(recipient_num, numeros_cache)
                     self.get_or_create_interceptacao_numero(
                         recipient,
                         interceptacao,
@@ -192,12 +204,12 @@ class PlanilhaRepository:
     def process_planilha3(self, df, ticket, interceptacao, numeros_cache, interceptacao_cache):
         for _, row in df.iterrows():
             # Alvo
-            alvo = self.get_or_create_numero(row['ALVO'], ticket, numeros_cache)
+            alvo = self.get_or_create_numero(row['ALVO'], numeros_cache)
             self.get_or_update_interceptacao_numero(alvo, numeros_cache)
             self.get_or_create_interceptacao_numero(alvo, interceptacao, True, interceptacao_cache)
 
             # Call creator
-            call_creator = self.get_or_create_numero(row['CALL CREATOR'], ticket, numeros_cache)
+            call_creator = self.get_or_create_numero(row['CALL CREATOR'], numeros_cache)
             is_alvo_creator = (str(row['CALL CREATOR']) == str(row['ALVO']))
             self.get_or_create_interceptacao_numero(call_creator, interceptacao, is_alvo_creator, interceptacao_cache)
 
@@ -220,7 +232,7 @@ class PlanilhaRepository:
             # Receptor
             receptor_numero = str(row['RECEPTOR'])
             if receptor_numero and receptor_numero.lower() != 'nan':
-                receptor = self.get_or_create_numero(receptor_numero, ticket, numeros_cache)
+                receptor = self.get_or_create_numero(receptor_numero, numeros_cache)
                 is_alvo_receptor = (receptor_numero == str(row['ALVO']))
                 self.get_or_create_interceptacao_numero(receptor, interceptacao, is_alvo_receptor, interceptacao_cache)
 
@@ -254,9 +266,9 @@ class PlanilhaRepository:
             
     def process_planilha4(self, df, ticket, interceptacao, numeros_cache, interceptacao_cache):
         for _, row in df.iterrows():
-            alvo = self.get_or_create_numero(row['ALVO'], ticket, numeros_cache)
+            alvo = self.get_or_create_numero(row['ALVO'], numeros_cache)
             self.get_or_update_interceptacao_numero(alvo, numeros_cache)
-            contato = self.get_or_create_numero(row['CONTATO'], ticket, numeros_cache)
+            contato = self.get_or_create_numero(row['CONTATO'], numeros_cache)
 
             self.get_or_create_interceptacao_numero(alvo, interceptacao, True, interceptacao_cache)
             self.get_or_create_interceptacao_numero(contato, interceptacao, row['CONTATO'] == row['ALVO'], interceptacao_cache)
@@ -266,7 +278,7 @@ class PlanilhaRepository:
 
     def process_planilha5(self, df, ticket, interceptacao, numeros_cache, grupos_cache, interceptacao_cache):
         for _, row in df.iterrows():
-            alvo = self.get_or_create_numero(row['ALVO'], ticket, numeros_cache)
+            alvo = self.get_or_create_numero(row['ALVO'], numeros_cache)
             self.get_or_update_interceptacao_numero(alvo, numeros_cache)
             self.get_or_create_interceptacao_numero(alvo, interceptacao, True, interceptacao_cache)
 

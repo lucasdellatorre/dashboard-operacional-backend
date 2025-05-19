@@ -11,8 +11,7 @@ class Planilha(db.Model):
     nome = Column(String, nullable=False)
     dataUpload = Column("data_upload", DATE, nullable=False, default=datetime.now())
     size = Column(Integer, nullable=False)
-    
-    # usuarioId = Column("usuario_id", Integer, ForeignKey('usuarios.id'), nullable=False)
+    cpf = Column(String(11), nullable=True)
     
     @staticmethod
     def fromPlanilhaEntidade(planilha: PlanilhaEntidade) -> "Planilha":

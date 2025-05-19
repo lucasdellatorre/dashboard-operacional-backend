@@ -4,6 +4,13 @@ from app.domain.repositories.numerorepository import INumeroRepository
 from app.domain.entities.numero import Numero as DomainNumero
 from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero as ORMInterceptacaoNumero
+from app.infraestructure.database.db import db
+from app.adapters.repositories.entities.numero import Numero
+from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito
+from app.adapters.repositories.entities.interceptacaonumero import InterceptacaoNumero
+from app.adapters.repositories.entities.interceptacao import Interceptacao
+from app.adapters.repositories.entities.planilha import Planilha
+from app.adapters.repositories.entities.operacao import Operacao
 
 class NumeroRepository(INumeroRepository):
     def __init__(self, session: Session = db.session):
@@ -16,3 +23,79 @@ class NumeroRepository(INumeroRepository):
     def isAlvo(self, numero_id) -> bool:
         result = self.session.query(ORMInterceptacaoNumero).filter(ORMInterceptacaoNumero.numeroId == int(numero_id), ORMInterceptacaoNumero.isAlvo == True).first()
         return result is not None
+    
+    def buscaNumero(self, operacao_ids: list[int]) -> list[dict]:
+        query = (
+            self.session.query(
+                Numero.id.label("id"),
+                Numero.numero.label("numero"),
+                InterceptacaoNumero.relevante.label("relevante"),
+                InterceptacaoNumero.isAlvo.label("isAlvo"),
+                Planilha.dataUpload.label("dataUpload")
+            )
+            .join(InterceptacaoNumero, InterceptacaoNumero.numeroId == Numero.id)
+            .join(Interceptacao, Interceptacao.id == InterceptacaoNumero.interceptacaoId)
+            .join(Planilha, Planilha.id == Interceptacao.planilhaId)
+            .join(Operacao, Operacao.id == Interceptacao.operacaoId)
+            .filter(Operacao.id.in_(operacao_ids), InterceptacaoNumero.isAlvo == True)
+            .distinct(Numero.id)
+        )
+        return [dict(row._mapping) for row in query.all()]
+
+    def BuscarOperacoesNumero(self) -> list[dict]:
+        query = (
+        self.session.query(
+            Numero.numero.label("numero"),
+            Numero.id.label("numeroId"),
+            Operacao.id.label("operacaoId"),
+            Operacao.nome.label("nome")
+        )
+        .join(InterceptacaoNumero, InterceptacaoNumero.numeroId == Numero.id)
+        .join(Interceptacao, Interceptacao.id == InterceptacaoNumero.interceptacaoId)
+        .join(Operacao, Operacao.id == Interceptacao.operacaoId)
+        .filter(InterceptacaoNumero.isAlvo == True)
+        .distinct(Numero.id, Operacao.id)
+    )
+
+        return [dict(row._mapping) for row in query.all()]
+    
+    def listar_todos(self) -> list[dict]:
+        query = (
+            self.session.query(
+                ORMNumero.id.label("id"),
+                ORMNumero.numero.label("numero")
+            )
+            .join(ORMInterceptacaoNumero, ORMInterceptacaoNumero.numeroId == ORMNumero.id)
+            .distinct(ORMNumero.id)
+        )
+        resultados = query.all()
+        return [dict(row._mapping) for row in resultados]
+
+    def listar_com_suspeitos(self) -> list[dict]:
+        from app.adapters.repositories.entities.suspeito import Suspeito  # certifique-se de importar corretamente
+
+        query = (
+            self.session.query(
+                Numero.id.label("id"),
+                Numero.numero.label("numero"),
+                Suspeito.apelido.label("apelido"),
+                (Suspeito.id != None).label("suspeito")
+            )
+            .outerjoin(NumeroSuspeito, Numero.id == NumeroSuspeito.numeroId)
+            .outerjoin(Suspeito, Suspeito.id == NumeroSuspeito.suspeitoId)
+            .distinct(Numero.id)
+        )
+
+        return [dict(row._mapping) for row in query.all()]
+
+    def get_all_by_ids(self, numero_ids: list[int]) -> list[DomainNumero]:
+        if not numero_ids:
+            return []
+
+        resultados = (
+            self.session.query(ORMNumero)
+            .filter(ORMNumero.id.in_(numero_ids))
+            .all()
+        )
+
+        return [ORMNumero.toNumeroEntidade(numero) for numero in resultados]
