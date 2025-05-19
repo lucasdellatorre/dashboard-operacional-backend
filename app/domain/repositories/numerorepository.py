@@ -13,7 +13,7 @@ class INumeroRepository(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def buscaNumero(self, operacao_ids: List[int]) -> list[ListaNumeroDTO]:
+    def buscaNumero(self, operacao_ids: List[int]) -> list[dict]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -28,6 +28,9 @@ class INumeroRepository(ABC):
     @abstractmethod
     def get_all_by_ids(self, numero_ids: list[int]) -> list[DomainNumero]:
         """Retorna todos os números cujo ID está presente na lista fornecida."""
+        raise NotImplementedError()
+
+    @abstractmethod
     def listar_com_suspeitos(self) -> list[dict]:
         """
         Retorna todos os números interceptados com seus respectivos dados de suspeito (se houver).
