@@ -2,6 +2,9 @@ from flask import request, Blueprint
 from flask_restful import Api, Resource
 from app.application.factories.suspeitofactory import SuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
+from app.application.dto.createemaildto import CreateEmailDTO
+from app.application.usecases.createemailusecase import CreateEmailUseCase
+
 
 # --- POST controller ---
 class SuspeitoCreateController(Resource):
@@ -99,6 +102,60 @@ class SuspeitoDetailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+class CreateEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
+
+    def post(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          201:
+            description: Email criado com sucesso
+          400:
+            description: Falha ao criar email
+          500:
+            description: Erro interno
+        """
+        try:
+            data = request.get_json()
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            dto = CreateEmailDTO.from_dict(data, id, cpf_usuario)
+            is_successful = self.create_email_use_case.execute(dto)
+            
+            if is_successful:
+                return { "message": "Email criado com sucesso!" }, 201
+            return { "message": "Falha ao criar email!" }, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
 
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
 api = Api(blueprint_suspeito)
@@ -116,5 +173,13 @@ api.add_resource(
     "/suspeito/<int:id>",
     resource_class_kwargs={
         "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+    }
+)
+
+api.add_resource(
+    CreateEmailController,
+    "/suspeito/<int:id>/email",
+    resource_class_kwargs={
+        "create_email_use_case": SuspeitoFactory.create_email()
     }
 )

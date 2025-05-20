@@ -1,5 +1,5 @@
 class SuspeitoEmail():
-    def __init__(self, suspeitoId, email, lastUpdateCpf, lastUpdateDate, id=None):
+    def __init__(self, suspeitoId, email, lastUpdateCpf, lastUpdateDate = None, id=None):
         self.id = id
         self.suspeitoId = suspeitoId
         self.email = email

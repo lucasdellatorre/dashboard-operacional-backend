@@ -1,4 +1,6 @@
+from datetime import datetime
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import SQLAlchemyError
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
@@ -9,9 +11,8 @@ from app.adapters.repositories.entities.suspeito import Suspeito as ORMSuspeito
 from app.adapters.repositories.entities.numero import Numero as ORMSNumero
 from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito as ORMNumeroSuspeito
 from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as ORMSuspeitoEmail
-from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
 from app.infraestructure.database.db import db
+from app.infraestructure.utils.logger import logger
 
 class SuspeitoRepository(ISuspeitoRepository):
     def get_by_id_with_relations(self, id: int) -> SuspeitoEntity | None:
@@ -205,3 +206,14 @@ class SuspeitoRepository(ISuspeitoRepository):
         except SQLAlchemyError as e:
             db.session.rollback()
             raise e
+
+    def create_email(self, suspeito_email: SuspeitoEmailEntity) -> bool:
+        try:
+            email_orm = ORMSuspeitoEmail.fromSuspeitoEmailEntidade(suspeito_email)
+            db.session.add(email_orm)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(e)
+            return False
