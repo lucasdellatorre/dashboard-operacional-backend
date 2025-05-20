@@ -6,3 +6,12 @@ class SuspeitoEmail():
         self.lastUpdateCpf = lastUpdateCpf
         self.lastUpdateDate = lastUpdateDate
         
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "suspeitoId": self.suspeitoId,
+            "email": self.email,
+            "lastUpdateCpf": self.lastUpdateCpf,
+            "lastUpdateDate": self.lastUpdateDate,
+        }
+        

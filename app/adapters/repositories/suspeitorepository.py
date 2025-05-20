@@ -227,3 +227,7 @@ class SuspeitoRepository(ISuspeitoRepository):
             db.session.rollback()
             logger.error(e)
             return False
+        
+    def get_all_email(self, suspeito_id):
+        results = db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.suspeitoId == suspeito_id).all()
+        return [ORMSuspeitoEmail.toSuspeitoEmailEntidade(result) for result in results]

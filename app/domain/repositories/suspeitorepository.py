@@ -47,3 +47,10 @@ class ISuspeitoRepository(ABC):
         Deve retornar um valor booleano expressando o sucesso da operação.
         """
         pass
+    
+    @abstractmethod
+    def get_all_email(self) -> list[SuspeitoEmail]:
+        """
+        Retorna todos emails do suspeito.
+        """
+        pass

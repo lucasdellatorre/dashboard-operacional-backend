@@ -20,3 +20,8 @@ class SuspeitoEmail(db.Model):
     def fromSuspeitoEmailEntidade(suspeitoEmail: SuspeitoEmailEntidade) -> "SuspeitoEmail":
         """Converts a domain entity to an ORM model instance."""
         return SuspeitoEmail(suspeitoId=suspeitoEmail.suspeitoId, email=suspeitoEmail.email, lastUpdateCpf=suspeitoEmail.lastUpdateCpf)
+    
+    @staticmethod
+    def toSuspeitoEmailEntidade(suspeitoEmail: "SuspeitoEmail") -> SuspeitoEmailEntidade:
+        """Converts an ORM model instance to a domain entity."""
+        return SuspeitoEmailEntidade(id=suspeitoEmail.id, suspeitoId=suspeitoEmail.suspeitoId, email=suspeitoEmail.email, lastUpdateCpf=suspeitoEmail.lastUpdateCpf, lastUpdateDate=suspeitoEmail.lastUpdateDate)

@@ -5,9 +5,9 @@ from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 from app.application.dto.createemaildto import CreateEmailDTO
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
+from app.application.usecases.getallemailusecase import GetAllEmailUseCase
 
 
-# --- POST controller ---
 class SuspeitoCreateController(Resource):
     def __init__(self, **kwargs):
         self.create_suspeito_use_case = kwargs['create_suspeito_use_case']
@@ -103,14 +103,79 @@ class SuspeitoDetailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+        
+class GetEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_all_email_use_case: GetAllEmailUseCase = kwargs['get_all_email_use_case']
+    
+    def get(self, id):
+        """
+        Retorna os emails de um suspeito.
+        ---
+        tags:
+          - Planilha
+        responses:
+          200:
+            description: Lista de emails
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: ID do email
+                      suspeitoId:
+                        type: integer
+                        description: ID do suspeito
+                      email:
+                        type: string
+                        description: Email do suspeito
+                      lastUpdateCpf:
+                        type: string
+                        description: Último cpf que editou o email
+                      lastUpdateDate:
+                        type: date
+                        description: Última data de atualização
+          500:
+            description: Erro interno do servidor
+        """
+        try:
+            results = self.get_all_email_use_case.execute(id)
+            return { "emails": [ result.to_dict() for result in results] }, 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
           
 class ManageEmailController(Resource):
     def __init__(self, **kwargs):
         self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
         self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
-        
 
     def delete(self, id: int, emailId: int):
+        """
+        Deleta um email pelo ID do suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          201:
+            description: Email deletado com sucesso
+          400:
+            description: Falha ao deletar email
+          500:
+            description: Erro interno
+        """    
         try:
             cpf_usuario = request.headers.get("cpfUsuario")
             
@@ -190,6 +255,14 @@ api.add_resource(
     "/suspeito/<int:id>",
     resource_class_kwargs={
         "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+    }
+)
+
+api.add_resource(
+    GetEmailController,
+    "/suspeito/<int:id>/email",
+    resource_class_kwargs={
+        "get_all_email_use_case": SuspeitoFactory.get_all_email()
     }
 )
 
