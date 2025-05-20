@@ -4,6 +4,7 @@ from app.adapters.repositories.numerorepository import NumeroRepository
 from app.application.usecases.getsuspeitobyidusecase import GetSuspeitoByIdUseCase
 from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
 from app.application.usecases.createemailusecase import CreateEmailUseCase
+from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 
 class SuspeitoFactory:
     @staticmethod
@@ -24,3 +25,7 @@ class SuspeitoFactory:
     @staticmethod
     def create_email():
         return CreateEmailUseCase(SuspeitoFactory.build_service())
+    
+    @staticmethod
+    def delete_email():
+        return DeleteEmailUseCase(SuspeitoFactory.build_service())

@@ -4,6 +4,7 @@ from app.application.factories.suspeitofactory import SuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 from app.application.dto.createemaildto import CreateEmailDTO
 from app.application.usecases.createemailusecase import CreateEmailUseCase
+from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 
 
 # --- POST controller ---
@@ -103,9 +104,25 @@ class SuspeitoDetailController(Resource):
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
           
-class CreateEmailController(Resource):
+class ManageEmailController(Resource):
     def __init__(self, **kwargs):
+        self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
         self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
+        
+
+    def delete(self, id: int, emailId: int):
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            is_successful = self.delete_email_use_case.execute(id, emailId)
+            
+            if is_successful:
+                return { "message": "Email deletado com sucesso!" }, 201
+            return { "message": "Falha ao deletar email!" }, 400
+            
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
 
     def post(self, id: int):
         """
@@ -177,9 +194,10 @@ api.add_resource(
 )
 
 api.add_resource(
-    CreateEmailController,
-    "/suspeito/<int:id>/email",
+    ManageEmailController,
+    "/suspeito/<int:id>/email/<int:emailId>",
     resource_class_kwargs={
-        "create_email_use_case": SuspeitoFactory.create_email()
+        "create_email_use_case": SuspeitoFactory.create_email(),
+        "delete_email_use_case": SuspeitoFactory.delete_email(),
     }
 )

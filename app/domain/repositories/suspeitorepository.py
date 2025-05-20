@@ -33,6 +33,14 @@ class ISuspeitoRepository(ABC):
         pass
     
     @abstractmethod
+    def delete_email(self, suspeito_id, email_id):
+        """
+        Deleta um email do suspeito.
+         Deve retornar um valor booleano expressando o sucesso da operação.
+        """
+        pass
+    
+    @abstractmethod
     def create_email(self, suspeito_email: SuspeitoEmail) -> bool:
         """
         Cria e persiste um novo email do suspeito.

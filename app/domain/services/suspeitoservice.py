@@ -61,6 +61,9 @@ class SuspeitoService:
     def create_email(self, suspeito_email: SuspeitoEmailEntity):
         return self.suspeito_repository.create_email(suspeito_email)
     
+    def delete_email(self, suspeito_id, email_id):
+        return self.suspeito_repository.delete_email(suspeito_id, email_id)
+    
     def _check_numeros_em_uso(self, numero_ids: list[int]):
         for numero_id in numero_ids:
             suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)

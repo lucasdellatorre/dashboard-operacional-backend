@@ -217,3 +217,13 @@ class SuspeitoRepository(ISuspeitoRepository):
             db.session.rollback()
             logger.error(e)
             return False
+        
+    def delete_email(self, suspeito_id, email_id) -> bool:
+        try:
+            db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.id == email_id, ORMSuspeitoEmail.suspeitoId == suspeito_id).delete()
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(e)
+            return False
