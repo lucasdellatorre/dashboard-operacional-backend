@@ -4,13 +4,14 @@ from typing import List
 from app.infraestructure.database.db import db
 from app.domain.entities.mensagem import Mensagem
 from app.adapters.repositories.entities.mensagens import Mensagem as ORMMensagem
-from app.domain.repositories.mensagemrepository import IMensagemRepository
+from app.domain.repositories.mensagemiprepository import IMensagemIPRepository
+from app.application.dto.filtromensagemdto import FiltroMensagemDTO
 
-class MensagensRepository(IMensagemRepository):
+class MensagemIPRepository(IMensagemIPRepository):
     def __init__(self, session: Session = db.session):
         self.session = session
 
-    def buscar_por_filtros(self, filtro: Mensagem) -> List[Mensagem]:
+    def buscar_mensagens_por_ip(self, filtro: FiltroMensagemDTO) -> List[Mensagem]:
         query = self.session.query(ORMMensagem)
 
         filtros = [

@@ -1,4 +1,4 @@
-from app.adapters.repositories.ipmensagemrepository import MensagensRepository as MensagemIPRepository
+from app.adapters.repositories.mensagemiprepository import MensagemIPRepository
 from app.domain.services.ipmensagemservice import IpmensagemService
 from app.application.usecases.buscarmensagemporipusecase import BuscarMensagemPorIPUseCase
 

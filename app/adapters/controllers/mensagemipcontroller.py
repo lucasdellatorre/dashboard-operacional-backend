@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api, Resource, reqparse
 from app.application.factories.mensagemipfactory import MensagemIpFactory
 from app.application.usecases.buscarmensagemporipusecase import BuscarMensagemPorIPUseCase
-from app.application.dto.mensagemresponsedto import MensagemResponseDTO
+from app.application.dto.filtromensagemdto import FiltroMensagemDTO
 
 class MensagemIPController(Resource):
     def __init__(self, **kwargs):
@@ -74,7 +74,7 @@ class MensagemIPController(Resource):
             if not args["ips"] or len(args["ips"]) == 0:
                 return {"message": "Informe ao menos um IP."}, 400
 
-            filtro_dto = MensagemResponseDTO(
+            filtro_dto = FiltroMensagemDTO(
                 numero=args["numero"],
                 ips=args["ips"],
                 grupo=args.get("grupo"),
@@ -86,8 +86,7 @@ class MensagemIPController(Resource):
                 dias_semana=args.get("diasSemana"),
             )
 
-            filtro_entidade = filtro_dto.to_entity()
-            mensagens_response = self.buscar_mensagem_usecase.execute(filtro_entidade)
+            mensagens_response = self.buscar_mensagem_usecase.execute(filtro_dto)
             return [m.to_dict() for m in mensagens_response], 200
 
         except Exception as e:
