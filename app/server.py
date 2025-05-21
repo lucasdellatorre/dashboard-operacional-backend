@@ -12,6 +12,7 @@ from app.adapters.controllers.uploadcontroller import blueprint_upload
 from app.adapters.controllers.teiacontroller import blueprint_teia
 from app.adapters.controllers.planilhacontroller import blueprint_planilha
 from app.adapters.controllers.numerocontroller import blueprint_numero
+from app.adapters.controllers.mensagemipcontroller import blueprint_mensagem_ip
 
 def create_app():
     # ============================================
@@ -71,7 +72,8 @@ def create_app():
         blueprint_upload,
         blueprint_teia,
         blueprint_planilha,
-        blueprint_numero
+        blueprint_numero,
+        blueprint_mensagem_ip
     ]
 
     for blueprint in blueprint_list:
