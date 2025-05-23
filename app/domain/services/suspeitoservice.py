@@ -4,6 +4,7 @@ from app.domain.repositories.numerorepository import INumeroRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
+from app.domain.entities.suspeitoemail import SuspeitoEmail as SuspeitoEmailEntity
 
 class SuspeitoService:
     def __init__(
@@ -56,6 +57,15 @@ class SuspeitoService:
         )
 
         return self.suspeito_repository.create(suspeito)
+    
+    def create_email(self, suspeito_email: SuspeitoEmailEntity):
+        return self.suspeito_repository.create_email(suspeito_email)
+    
+    def delete_email(self, suspeito_id, email_id):
+        return self.suspeito_repository.delete_email(suspeito_id, email_id)
+    
+    def get_all_email(self, suspeito_id):
+        return self.suspeito_repository.get_all_email(suspeito_id)
     
     def _check_numeros_em_uso(self, numero_ids: list[int]):
         for numero_id in numero_ids:
