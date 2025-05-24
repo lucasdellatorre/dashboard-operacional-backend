@@ -1,3 +1,4 @@
+from app.application.usecases.suspeitousecase import SuspeitoUseCase
 from app.domain.services.suspeitoservice import SuspeitoService
 from app.adapters.repositories.suspeitorepository import SuspeitoRepository
 from app.adapters.repositories.numerorepository import NumeroRepository
@@ -34,3 +35,7 @@ class SuspeitoFactory:
     @staticmethod
     def get_all_email():
         return GetAllEmailUseCase(SuspeitoFactory.build_service())
+    
+    @staticmethod
+    def atualizar_suspeito():
+        return SuspeitoUseCase(SuspeitoFactory.build_service())

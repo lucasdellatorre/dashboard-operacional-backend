@@ -3,8 +3,10 @@ from app.domain.entities.suspeito import Suspeito
 from app.domain.entities.suspeitoemail import SuspeitoEmail
 
 
-
 class ISuspeitoRepository(ABC):
+    @abstractmethod
+    def atualizar(self, id: int, dados: dict) -> dict:
+        raise (NotImplementedError)
 
     @abstractmethod
     def get_by_id_with_relations(self, id: int) -> Suspeito | None:

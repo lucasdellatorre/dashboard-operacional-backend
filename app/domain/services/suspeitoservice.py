@@ -66,10 +66,16 @@ class SuspeitoService:
     
     def get_all_email(self, suspeito_id):
         return self.suspeito_repository.get_all_email(suspeito_id)
+            
+    def atualizar_suspeito(self, id, dados):
+        cpf = dados.get("cpf")
+        if cpf is not None and (not cpf.isdigit() or len(cpf) != 11):
+            raise ValueError("CPF inválido. Deve conter exatamente 11 dígitos numéricos.")
+        
+        return self.suspeito_repository.atualizar(id, dados)
     
     def _check_numeros_em_uso(self, numero_ids: list[int]):
         for numero_id in numero_ids:
             suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)
             if suspeito:
                 raise ValueError(f"O número {numero_id} já está vinculado ao suspeito '{suspeito.apelido}'.")
-        

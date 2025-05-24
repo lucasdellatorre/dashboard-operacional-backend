@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.exc import SQLAlchemyError
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
@@ -15,6 +15,24 @@ from app.infraestructure.database.db import db
 from app.infraestructure.utils.logger import logger
 
 class SuspeitoRepository(ISuspeitoRepository):
+    def __init__(self, session: Session = db.session):
+        self.session = session
+
+    def atualizar(self, id: int, dados: dict):
+        suspeito = self.session.query(ORMSuspeito).get(id)
+        if not suspeito:
+            raise LookupError("Suspeito não encontrado.")
+        
+        suspeito.lastUpdateDate = datetime.now()
+        suspeito.lastUpdateCpf = dados['lastUpdateCpf']
+
+        for campo in ['nome', 'cpf', 'apelido', 'anotacoes', 'relevante']:
+            if campo in dados:
+                setattr(suspeito, campo, dados[campo])
+
+        self.session.commit()
+        return ORMSuspeito.toEntity(suspeito)
+
     def get_by_id_with_relations(self, id: int) -> SuspeitoEntity | None:
         orm_obj = (
             db.session.query(ORMSuspeito)

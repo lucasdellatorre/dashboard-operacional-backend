@@ -6,6 +6,39 @@ from app.application.dto.createemaildto import CreateEmailDTO
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase
+from app.application.usecases.suspeitousecase import SuspeitoUseCase
+
+class SuspeitoController(Resource):
+    def __init__(self, **kwargs):
+        self.atualizar_suspeito: SuspeitoUseCase = kwargs["atualizar_suspeito"]
+        
+    def put(self, id):
+        """
+        Atualiza os dados de um suspeito.
+        ---
+        Parâmetros:
+          - id (path): ID do suspeito
+          - JSON no corpo: Campos que podem ser atualizados (nome, cpf, apelido, anotacoes, relevante)
+
+        Respostas:
+          - 200: Suspeito atualizado com sucesso
+          - 400: Dados inválidos
+          - 404: Suspeito não encontrado
+          - 500: Erro interno
+        """
+        data = request.get_json(force=True)
+        cpf_usuario = request.headers.get("cpfUsuario")
+        try:
+            suspeito_atualizado = self.atualizar_suspeito.atualizar_suspeito(id, data, cpf_usuario)
+            return suspeito_atualizado, 200
+        except ValueError as ve:
+            return {"error": str(ve)}, 400
+        except LookupError as le:
+            print(le)
+            return {"error": "Suspeito não encontrado."}, 404
+        except Exception as e:
+            print(e)
+            return {"error": "Erro interno."}, 500
 
 
 class SuspeitoCreateController(Resource):
@@ -188,7 +221,7 @@ class ManageEmailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
-
+        
     def post(self, id: int):
         """
         Busca os dados detalhados de um suspeito pelo ID.
@@ -239,8 +272,17 @@ class ManageEmailController(Resource):
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
 
+# # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
 api = Api(blueprint_suspeito)
+
+api.add_resource(
+    SuspeitoController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "atualizar_suspeito": SuspeitoFactory.atualizar_suspeito()
+    }
+)
 
 api.add_resource(
     SuspeitoCreateController,
