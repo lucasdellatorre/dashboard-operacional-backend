@@ -12,7 +12,10 @@ from app.adapters.controllers.uploadcontroller import blueprint_upload
 from app.adapters.controllers.teiacontroller import blueprint_teia
 from app.adapters.controllers.planilhacontroller import blueprint_planilha
 from app.adapters.controllers.numerocontroller import blueprint_numero
+from app.adapters.controllers.ipcontroller import blueprint_ip
 from app.adapters.controllers.suspeitocontroller import blueprint_suspeito
+from app.adapters.controllers.alvosoperacaocontroller import blueprint_numeros_operacao
+from app.adapters.controllers.alvocontroller import blueprint_alvo
 
 def create_app():
     # ============================================
@@ -73,7 +76,10 @@ def create_app():
         blueprint_teia,
         blueprint_planilha,
         blueprint_numero,
-        blueprint_suspeito
+        blueprint_ip,
+        blueprint_numeros_operacao, 
+        blueprint_suspeito,
+        blueprint_alvo
     ]
 
     for blueprint in blueprint_list:

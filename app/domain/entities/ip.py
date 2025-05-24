@@ -1,4 +1,4 @@
-class IP:
+class IP():
     def __init__(
         self,
         id: int,
