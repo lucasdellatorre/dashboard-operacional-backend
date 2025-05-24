@@ -2,7 +2,9 @@ from dataclasses import dataclass
 
 @dataclass
 class NumeroMessageCountRequestDTO():
-    numeros: list
+    operationId: list[int]
+    targetId: list[int]
+    suspectId: list[int]
     
 @dataclass
 class NumeroMessageCountResponseDTO():

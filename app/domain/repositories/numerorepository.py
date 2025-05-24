@@ -37,3 +37,10 @@ class INumeroRepository(ABC):
         Cada item deve conter: id, numero, apelido (ou None), e flag booleana indicando se é suspeito.
         """
         raise NotImplementedError()
+    
+    @abstractmethod
+    def numeroIsOnOperation(self, numero_id, operacoes_id) -> bool:
+        """
+        Retorna um valor booleano indicando se o numero está em alguma operação conforme o id.
+        """
+        raise NotImplementedError()

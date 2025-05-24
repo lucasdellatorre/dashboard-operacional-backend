@@ -6,6 +6,9 @@ class NumeroService():
     def __init__(self, numero_repository: INumeroRepository):
         self.repository = numero_repository
         
+    def numeroIsOnOperation(self, numero_id, operacoes_id):
+        return self.repository.numeroIsOnOperation(numero_id, operacoes_id)
+        
     def find(self, numero_id) -> Numero:
         return self.repository.find(numero_id)
     

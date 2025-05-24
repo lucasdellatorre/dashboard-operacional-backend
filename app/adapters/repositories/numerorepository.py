@@ -18,6 +18,15 @@ class NumeroRepository(INumeroRepository):
     def __init__(self, session: Session = db.session):
         self.session = session
         
+    def numeroIsOnOperation(self, numero_id, operacoes_id: list):
+        return (db.session.query(InterceptacaoNumero)
+            .join(Interceptacao, InterceptacaoNumero.interceptacaoId == Interceptacao.id)
+            .filter(
+                InterceptacaoNumero.numeroId == numero_id,
+                Interceptacao.operacaoId.in_(operacoes_id)
+            )
+            .first()) is not None
+        
     def find(self, numero_id) -> DomainNumero:
         result = self.session.query(ORMNumero).get(int(numero_id))
         return ORMNumero.toNumeroEntidade(result)
