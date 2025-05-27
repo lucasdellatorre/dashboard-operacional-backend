@@ -1,13 +1,7 @@
-from app.domain.entities.numero import Numero
-from typing import Optional
-
-class NumeroSuspeito:
-    def __init__(
-        self,
-        numero: Numero,
-        lastUpdateCpf: Optional[str] = None,
-        lastUpdateDate: Optional[str] = None
-    ):
-        self.numero = numero
+class NumeroSuspeito():
+    def __init__(self, suspeitoId, numeroId, lastUpdateCpf, lastUpdateDate):
+        self.suspeitoId = suspeitoId
+        self.numeroId = numeroId
         self.lastUpdateCpf = lastUpdateCpf
         self.lastUpdateDate = lastUpdateDate
+        

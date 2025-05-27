@@ -5,7 +5,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
+    SQLALCHEMY_DATABASE_URI = databaseUrl
     
 
 class ProductionConfig(Config):

@@ -66,7 +66,7 @@ def create_app():
     # ============================================
 
     blueprint_list = [
-blueprint_test,
+        blueprint_test,
         blueprint_usuario,
         blueprint_operacao,
         blueprint_upload,
