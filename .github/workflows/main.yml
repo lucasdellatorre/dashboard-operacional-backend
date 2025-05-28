@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: python:3.13.2
-    env:
-      ENV: testing
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,7 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run pytest
-        run: pytest --junitxml=test-results.xml
+        run: ENV=testing pytest --junitxml=test-results.xml
 
       - name: Upload test results
         if: always()
