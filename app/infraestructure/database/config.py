@@ -5,16 +5,15 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
-    
 
 class ProductionConfig(Config):
     DEBUG = False
+    SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
 class StagingConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
-
+    SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
