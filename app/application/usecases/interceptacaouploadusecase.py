@@ -11,17 +11,17 @@ class InterceptacaoUploadUseCase:
     def execute(self, intercept_upload_dto: InterceptacaoUploadDTO) -> None:
         file = intercept_upload_dto.file
         operacao_id = intercept_upload_dto.operacao_id
-        
+        filename = file.filename
+        if file:
+            file.seek(0,2)
+            file_size = int(file.tell()/1024)
+            file.seek(0)
+               
         if file is None:
             raise ValueError('file not found!')
         
-        filename = file.filename
         if filename is None:
             raise ValueError('filename not found!')
-
-        file.seek(0, 2)  # Move to end of file
-        file_size = int(file.tell() / 1024)  # size in KB
-        file.seek(0)  # Reset file pointer
         
         if not self.upload_service.allowed_file(filename):
             raise ValueError('file extension not allowed!')
