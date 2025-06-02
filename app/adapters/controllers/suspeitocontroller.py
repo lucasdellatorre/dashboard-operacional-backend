@@ -1,12 +1,14 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 from app.application.factories.suspeitofactory import SuspeitoFactory
+from app.application.factories.numerosuspeitofactory import NumeroSuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 from app.application.dto.createemaildto import CreateEmailDTO
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase
 from app.application.usecases.suspeitousecase import SuspeitoUseCase
+from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
 
 class SuspeitoController(Resource):
     def __init__(self, **kwargs):
@@ -271,6 +273,47 @@ class ManageEmailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+class ManageNumeroController(Resource):
+    def __init__(self, **kwargs):
+        self.delete_numero_use_case:DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
+
+    def delete(self, id: int, numeroId: int):
+        """
+        Remove a associação de um número com um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            description: ID do suspeito
+            schema:
+              type: integer
+          - in: path
+            name: numeroId
+            required: true
+            description: ID do número
+            schema:
+              type: integer
+        responses:
+          200:
+            description: Associação removida com sucesso
+          400:
+            description: Não é permitido remover o único número vinculado ao suspeito.
+          500:
+            description: Erro interno
+        """
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            is_removed = self.delete_numero_use_case.execute(id, numeroId)
+            if is_removed:
+                return { "message": "Número desvinculado com sucesso." }, 200
+            return { "message": "Não é permitido remover o único número vinculado ao suspeito." }, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+
 
 # # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
@@ -314,5 +357,13 @@ api.add_resource(
     resource_class_kwargs={
         "create_email_use_case": SuspeitoFactory.create_email(),
         "delete_email_use_case": SuspeitoFactory.delete_email(),
+    }
+)
+
+api.add_resource(
+    ManageNumeroController,
+    "/suspeito/<int:id>/numero/<int:numeroId>",
+    resource_class_kwargs={
+        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number()
     }
 )
