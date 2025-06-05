@@ -96,4 +96,4 @@ jobs:
 
       - name: Push to Heroku
         run: |
-          git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_BACKEND.git HEAD:main
+          git push -f https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_BACKEND.git HEAD:main
