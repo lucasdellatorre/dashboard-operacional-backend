@@ -30,3 +30,16 @@ class Suspeito(db.Model):
     @staticmethod
     def toSuspeitoEntidade(Suspeito: "Suspeito") -> SuspeitoEntidade:
         return SuspeitoEntidade(**Suspeito)
+    
+    @staticmethod
+    def toEntity(suspeito: "Suspeito") -> SuspeitoEntidade:
+        return SuspeitoEntidade(
+        id=suspeito.id,
+        nome=suspeito.nome,
+        cpf=suspeito.cpf,
+        anotacoes=suspeito.anotacoes,
+        apelido=suspeito.apelido,
+        relevante=suspeito.relevante,
+        lastUpdateDate=suspeito.lastUpdateDate,
+        lastUpdateCpf=suspeito.lastUpdateCpf
+    )

@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
 from app.domain.entities.suspeito import Suspeito
+from app.domain.entities.suspeitoemail import SuspeitoEmail
 
 
 class ISuspeitoRepository(ABC):
+    @abstractmethod
+    def atualizar(self, id: int, dados: dict) -> dict:
+        raise (NotImplementedError)
 
     @abstractmethod
     def get_by_id_with_relations(self, id: int) -> Suspeito | None:
@@ -27,5 +31,28 @@ class ISuspeitoRepository(ABC):
         """
         Cria e persiste um novo suspeito.
         Deve retornar o objeto com ID preenchido após a inserção.
+        """
+        pass
+    
+    @abstractmethod
+    def delete_email(self, suspeito_id, email_id):
+        """
+        Deleta um email do suspeito.
+         Deve retornar um valor booleano expressando o sucesso da operação.
+        """
+        pass
+    
+    @abstractmethod
+    def create_email(self, suspeito_email: SuspeitoEmail) -> bool:
+        """
+        Cria e persiste um novo email do suspeito.
+        Deve retornar um valor booleano expressando o sucesso da operação.
+        """
+        pass
+    
+    @abstractmethod
+    def get_all_email(self) -> list[SuspeitoEmail]:
+        """
+        Retorna todos emails do suspeito.
         """
         pass

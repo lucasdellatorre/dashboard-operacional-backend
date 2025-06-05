@@ -1,4 +1,6 @@
-from sqlalchemy.orm import joinedload
+from datetime import datetime
+from sqlalchemy.orm import joinedload, Session
+from sqlalchemy.exc import SQLAlchemyError
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
@@ -9,11 +11,28 @@ from app.adapters.repositories.entities.suspeito import Suspeito as ORMSuspeito
 from app.adapters.repositories.entities.numero import Numero as ORMSNumero
 from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito as ORMNumeroSuspeito
 from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as ORMSuspeitoEmail
-from sqlalchemy.exc import SQLAlchemyError
-from datetime import datetime
 from app.infraestructure.database.db import db
+from app.infraestructure.utils.logger import logger
 
 class SuspeitoRepository(ISuspeitoRepository):
+    def __init__(self, session: Session = db.session):
+        self.session = session
+
+    def atualizar(self, id: int, dados: dict):
+        suspeito = self.session.query(ORMSuspeito).get(id)
+        if not suspeito:
+            raise LookupError("Suspeito não encontrado.")
+        
+        suspeito.lastUpdateDate = datetime.now()
+        suspeito.lastUpdateCpf = dados['lastUpdateCpf']
+
+        for campo in ['nome', 'cpf', 'apelido', 'anotacoes', 'relevante']:
+            if campo in dados:
+                setattr(suspeito, campo, dados[campo])
+
+        self.session.commit()
+        return ORMSuspeito.toEntity(suspeito)
+
     def get_by_id_with_relations(self, id: int) -> SuspeitoEntity | None:
         orm_obj = (
             db.session.query(ORMSuspeito)
@@ -205,3 +224,28 @@ class SuspeitoRepository(ISuspeitoRepository):
         except SQLAlchemyError as e:
             db.session.rollback()
             raise e
+
+    def create_email(self, suspeito_email: SuspeitoEmailEntity) -> bool:
+        try:
+            email_orm = ORMSuspeitoEmail.fromSuspeitoEmailEntidade(suspeito_email)
+            db.session.add(email_orm)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(e)
+            return False
+        
+    def delete_email(self, suspeito_id, email_id) -> bool:
+        try:
+            db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.id == email_id, ORMSuspeitoEmail.suspeitoId == suspeito_id).delete()
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            logger.error(e)
+            return False
+        
+    def get_all_email(self, suspeito_id):
+        results = db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.suspeitoId == suspeito_id).all()
+        return [ORMSuspeitoEmail.toSuspeitoEmailEntidade(result) for result in results]
