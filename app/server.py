@@ -16,6 +16,7 @@ from app.adapters.controllers.ipcontroller import blueprint_ip
 from app.adapters.controllers.suspeitocontroller import blueprint_suspeito
 from app.adapters.controllers.alvosoperacaocontroller import blueprint_numeros_operacao
 from app.adapters.controllers.alvocontroller import blueprint_alvo
+from app.adapters.controllers.teiaipcontroller import blueprint_teia_ip
 
 def create_app(config_class=None):
     # ============================================
@@ -74,6 +75,7 @@ def create_app(config_class=None):
         blueprint_operacao,
         blueprint_upload,
         blueprint_teia,
+        blueprint_teia_ip,
         blueprint_planilha,
         blueprint_numero,
         blueprint_ip,

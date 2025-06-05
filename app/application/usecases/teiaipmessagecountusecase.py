@@ -15,6 +15,7 @@ class TeiaIPMessageCountUseCase:
             ip_obj = self.teia_ip_service.find(ip_id)
             if not ip_obj:
                 continue
+            print(f"[DEBUG] Encontrado IP: {ip_obj.ip} (ID: {ip_id})")
 
             nodes.append({"id": ip_obj.ip, "group": RED})
             relations = self.mensagem_service.count_mensagens_por_ip(ip_obj)

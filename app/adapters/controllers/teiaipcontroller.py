@@ -1,3 +1,4 @@
+# teiaipcontroller.py
 from flask import Blueprint, request
 from flask_restful import Api, Resource
 from app.application.dto.teiaipmessagecountdto import TeiaIPMessageCountRequestDTO
@@ -11,7 +12,7 @@ class TeiaIPController(Resource):
 
     def get(self):
         """
-        Retorna a contagem de mensagens por IP com base nos parâmetros fornecidos.
+        Retorna um grafo com nodos e links com base em IPs e mensagens.
         ---
         tags:
           - TeiaIP
@@ -23,11 +24,11 @@ class TeiaIPController(Resource):
             description: Lista de IDs de IP separados por vírgula (ex: 1,2,3)
         responses:
           200:
-            description: Contagem de mensagens retornada com sucesso
+            description: Grafo gerado com sucesso
           400:
-            description: Erro de validação nos parâmetros fornecidos
+            description: Erro de validação
           500:
-            description: Erro interno no servidor
+            description: Erro interno
         """
         try:
             ids_param = request.args.get('ids')

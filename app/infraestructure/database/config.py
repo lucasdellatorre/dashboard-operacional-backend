@@ -18,6 +18,7 @@ class StagingConfig(Config):
 class DevelopmentConfig(Config):
     DEVELOPMENT = True
     DEBUG = True
+    SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
 
 class TestingConfig(Config):

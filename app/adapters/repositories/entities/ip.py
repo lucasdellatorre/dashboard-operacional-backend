@@ -4,7 +4,7 @@ from app.infraestructure.database.db import db
 from app.domain.entities.ip import IP as IpEntidade
 
 class IP(db.Model):
-    __tablename__ = "ips"
+    __tablename__ = "ip"
 
     
     id = Column(Integer, primary_key=True, autoincrement="auto")

@@ -12,3 +12,14 @@ class MensagemRepository():
         results = self.session.query(ORMMensagem).filter(ORMMensagem.numeroId == numero_id).all()
         if results is None: return []
         return [ORMMensagem.toMensagemEntidade(result) for result in results]
+
+    def get_mensagens_by_ip(self, ip_id: int):
+        from app.adapters.repositories.entities.ip import IP as ORMIP
+
+        ip_obj = self.session.query(ORMIP).filter(ORMIP.id == ip_id).first()
+        if not ip_obj:
+            return []
+        ip_str = ip_obj.ip
+        mensagens = self.session.query(ORMMensagem).filter(ORMMensagem.remetenteIp == ip_str).all()
+
+        return [ORMMensagem.toMensagemEntidade(m) for m in mensagens]

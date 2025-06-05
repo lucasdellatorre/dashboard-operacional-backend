@@ -4,7 +4,7 @@ from app.infraestructure.database.db import db
 from app.domain.entities.mensagem import Mensagem as MensagemEntidade
 
 class Mensagem(db.Model):
-    __tablename__ = "mensagens"
+    __tablename__ = "mensagem"
     
     id = Column(Integer, primary_key=True, autoincrement="auto")
     messageExternalId = Column("message_external_id", String, nullable=True)

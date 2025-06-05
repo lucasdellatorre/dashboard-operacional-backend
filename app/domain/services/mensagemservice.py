@@ -22,10 +22,10 @@ class MensagemService():
 
         return dict(mem)
 
-        def count_mensagens_por_ip(self, ip_obj):
-            mensagens = self.repository.get_mensagens_by_ip(ip_obj.id)
-            count_map = {}
-            for msg in mensagens:
-                dest = msg.destinatario
-                count_map[dest] = count_map.get(dest, 0) + 1
-            return count_map
+    def count_mensagens_por_ip(self, ip_obj):
+        mensagens = self.repository.get_mensagens_by_ip(ip_obj.id)
+        count_map = {}
+        for msg in mensagens:
+            dest = msg.destinatario
+            count_map[dest] = count_map.get(dest, 0) + 1
+        return count_map
