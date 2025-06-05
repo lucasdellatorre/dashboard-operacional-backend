@@ -1,53 +1,56 @@
 from flask import Blueprint
 from flask_restful import Api, Resource
-from app.application.usecases.listanumerousercase import ListarNumeroUseCase
-from app.application.factories.listanumerofactory import ListaNumeroFactory  
+from app.application.usecases.getallnumbersusecase import GetAllNumbersUseCase
+from app.application.factories.listanumerofactory import ListaNumerosFactory
+import time
 
 class NumeroController(Resource):
     def __init__(self, **kwargs):
-        self.lista_numero: ListarNumeroUseCase = kwargs['lista_operacoes']
+        self.get_all_numeros: GetAllNumbersUseCase = kwargs['get_all_numeros']
 
-    def get(self, operacao_ids):
+    def get(self):
         """
-         Retorna a lista de números vinculados às operações informadas.
+        Retorna todos os números
         ---
         tags:
           - Números
-        parameters:
-          - name: operacao_ids
-            in: path
-            type: string
-            required: true
-            description: |
-              Lista de IDs de operação separados por vírgula (exemplo: 1,2,3)
         responses:
           200:
-            description: Lista de números vinculados às operações.
-            schema:
-              type: array
-              items:
-                type: object
-          400:
-            description: IDs de operação inválidos ou não fornecidos.
-          404:
-            description: Nenhum dado encontrado para as operações informadas.
+            description: Lista de números interceptados.
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      numero:
+                        type: string
           500:
-            description: Erro interno no servidor.
+            description: Erro interno no servidor
         """
+        start_time = time.time()
         try:
-            operacao_id_list = [int(op_id.strip()) for op_id in operacao_ids.split(',') if op_id.strip().isdigit()]
-            if not operacao_id_list:
-                return {"message": "IDs de operação inválidos ou não fornecidos."}, 400
-            numeros = self.lista_numero.execute(operacao_id_list)
-            if not numeros:
-                return {"message": "Nenhum dado encontrado para as operações informadas."}, 404
-            return [numero.to_dict() for numero in numeros], 200
+            numeros = self.get_all_numeros.execute()
+            return numeros, 200
+
         except Exception as e:
-            print(f'An error occurred: {e}')
+            print(f'[ERRO /numeros]: {e}')
             return {'message': 'Erro interno no servidor.'}, 500
 
+        finally:
+            duration_ms = (time.time() - start_time) * 1000
+            print(f'[INFO /numeros] Tempo de execução: {duration_ms:.2f} ms')
+
 blueprint_numero = Blueprint('blueprint_numero', __name__)
-
-
 api = Api(blueprint_numero)
-api.add_resource(NumeroController,'/numeros/operacao/<string:operacao_ids>',resource_class_kwargs={'lista_operacoes': ListaNumeroFactory.listar_numero()})
+
+api.add_resource(
+    NumeroController,
+    '/numeros',
+    resource_class_kwargs={
+        'get_all_numeros': ListaNumerosFactory.listar()
+    }
+)

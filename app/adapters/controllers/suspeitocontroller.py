@@ -1,118 +1,318 @@
-# from flask import Blueprint, jsonify
-# from flask_restful import Api, Resource, reqparse
-# from app.application.factories.suspeitofactory import SuspeitoFactory
-# from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
-# from app.application.dto.alvodto import AlvoDTO
-# from app.domain.services.alvoservice import AlvoService
+from flask import request, Blueprint
+from flask_restful import Api, Resource
+from app.application.factories.suspeitofactory import SuspeitoFactory
+from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
+from app.application.dto.createemaildto import CreateEmailDTO
+from app.application.usecases.createemailusecase import CreateEmailUseCase
+from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
+from app.application.usecases.getallemailusecase import GetAllEmailUseCase
+from app.application.usecases.suspeitousecase import SuspeitoUseCase
 
-# class SuspeitoController(Resource):
-#     def __init__(self, **kwargs):
-#         self.create_alvo_use_case: CreateSuspeitoUseCase = kwargs['create_alvo_use_case']
-#         self.req_parser = reqparse.RequestParser()
-
-#     def post(self):
-#         """
-#         Cria um novo alvo com base nas informações fornecidas.
-#         ---
-#         parameters:
-#           - in: body
-#             name: body
-#             required: true
-#             schema:
-#               type: object
-#               properties:
-#                 internalTicketNumber:
-#                   type: string
-#                   description: Número do ticket interno do alvo
-#                 descricao:
-#                   type: string
-#                   description: Descrição do alvo
-#                 nome:
-#                   type: string
-#                   description: Nome do alvo
-#                 cpf:
-#                   type: string
-#                   description: CPF do alvo
-#         responses:
-#           201:
-#             description: Alvo criado com sucesso
-#             schema:
-#               type: object
-#               properties:
-#                 Suspeito:
-#                   type: object
-#                   properties:
-#                     internalTicketNumber:
-#                       type: string
-#                       description: Número do ticket interno do alvo
-#                     descricao:
-#                       type: string
-#                     nome:
-#                       type: string
-#                     cpf:
-#                       type: string
-#           500:
-#             description: Erro interno do servidor
-#         """
-#         self.req_parser.add_argument('internalTicketNumber', required=True, location='json')
-#         self.req_parser.add_argument('descricao', required=True, location='json')
-#         self.req_parser.add_argument('nome', required=True, location='json')
-#         self.req_parser.add_argument('cpf', required=True, location='json')
+class SuspeitoController(Resource):
+    def __init__(self, **kwargs):
+        self.atualizar_suspeito: SuspeitoUseCase = kwargs["atualizar_suspeito"]
         
-#         args = self.req_parser.parse_args()
+    def put(self, id):
+        """
+        Atualiza os dados de um suspeito.
+        ---
+        Parâmetros:
+          - id (path): ID do suspeito
+          - JSON no corpo: Campos que podem ser atualizados (nome, cpf, apelido, anotacoes, relevante)
 
-#         try:
-#             suspeito_dto = AlvoDTO(**args)
-#             suspeito = self.create_alvo_use_case.execute(suspeito_dto)
-#             return {'Suspeito': suspeito.to_dict()}, 201
-#         except Exception as e:
-#             print(f'An error occurred: {e}')
-#             return {'Message': 'Internal Server Error'}, 500
+        Respostas:
+          - 200: Suspeito atualizado com sucesso
+          - 400: Dados inválidos
+          - 404: Suspeito não encontrado
+          - 500: Erro interno
+        """
+        data = request.get_json(force=True)
+        cpf_usuario = request.headers.get("cpfUsuario")
+        try:
+            suspeito_atualizado = self.atualizar_suspeito.atualizar_suspeito(id, data, cpf_usuario)
+            return suspeito_atualizado, 200
+        except ValueError as ve:
+            return {"error": str(ve)}, 400
+        except LookupError as le:
+            print(le)
+            return {"error": "Suspeito não encontrado."}, 404
+        except Exception as e:
+            print(e)
+            return {"error": "Erro interno."}, 500
+
+
+class SuspeitoCreateController(Resource):
+    def __init__(self, **kwargs):
+        self.create_suspeito_use_case = kwargs['create_suspeito_use_case']
+
+    def post(self):
+        """
+        Cria um novo suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - name: body
+            in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - apelido
+                - numeros_ids
+              properties:
+                apelido:
+                  type: string
+                nome:
+                  type: string
+                cpf:
+                  type: string
+                numeros_ids:
+                  type: array
+                  items:
+                    type: integer
+          - name: cpfUsuario
+            in: header
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          201:
+            description: Suspeito criado com sucesso
+          400:
+            description: Erro de validação
+          500:
+            description: Erro interno
+        """
+        data = request.get_json()
+        cpf_usuario = request.headers.get("cpfUsuario")
+
+        if not cpf_usuario:
+            return {"message": "Cabeçalho 'cpfUsuario' é obrigatório."}, 400
+
+        try:
+            dto = CreateSuspeitoDTO.from_dict(data)
+            dto.lastUpdateCpf = cpf_usuario  # ← atribui o CPF do usuário que criou
+            result = self.create_suspeito_use_case.execute(dto)
+            return result.to_dict(), 201
+        except ValueError as e:
+            return {"message": str(e)}, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+
+
+class SuspeitoDetailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_suspeito_by_id_use_case = kwargs['get_suspeito_by_id_use_case']
+
+    def get(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        try:
+            suspeito = self.get_suspeito_by_id_use_case.execute(id)
+            if not suspeito:
+                return {"message": "Suspeito não encontrado"}, 404
+            return suspeito.to_dict(), 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+        
+class GetEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_all_email_use_case: GetAllEmailUseCase = kwargs['get_all_email_use_case']
+    
+    def get(self, id):
+        """
+        Retorna os emails de um suspeito.
+        ---
+        tags:
+          - Planilha
+        responses:
+          200:
+            description: Lista de emails
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: ID do email
+                      suspeitoId:
+                        type: integer
+                        description: ID do suspeito
+                      email:
+                        type: string
+                        description: Email do suspeito
+                      lastUpdateCpf:
+                        type: string
+                        description: Último cpf que editou o email
+                      lastUpdateDate:
+                        type: date
+                        description: Última data de atualização
+          500:
+            description: Erro interno do servidor
+        """
+        try:
+            results = self.get_all_email_use_case.execute(id)
+            return { "emails": [ result.to_dict() for result in results] }, 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
           
-#     def get(self):
-#         """
-#         Retorna a lista de alvos ordenados por Internal Ticket Number.
-#         ---
-#         tags:
-#           - Alvo
-#         responses:
-#           200:
-#             description: Lista de alvos
-#             schema:
-#               type: object
-#               properties:
-#                 Suspeitos:
-#                   type: array
-#                   items:
-#                     type: object
-#                     properties:
-#                       internalTicketNumber:
-#                         type: string
-#                         description: Número do ticket interno do alvo
-#                       descricao:
-#                         type: string
-#                       nome:
-#                         type: string
-#                       cpf:
-#                         type: string
-#           500:
-#             description: Erro interno do servidor
-#         """
-#         try:
-#             alvo_service = AlvoService()
-#             alvos = alvo_service.list_alvos()
-#             return jsonify({'Suspeitos': [alvo.to_dict() for alvo in alvos]}), 200
-#         except Exception as e:
-#             print(f'An error occurred: {e}')
-#             return jsonify({'Message': 'Internal Server Error'}), 500
+class ManageEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
+        self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
 
+    def delete(self, id: int, emailId: int):
+        """
+        Deleta um email pelo ID do suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          201:
+            description: Email deletado com sucesso
+          400:
+            description: Falha ao deletar email
+          500:
+            description: Erro interno
+        """    
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            is_successful = self.delete_email_use_case.execute(id, emailId)
+            
+            if is_successful:
+                return { "message": "Email deletado com sucesso!" }, 201
+            return { "message": "Falha ao deletar email!" }, 400
+            
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+        
+    def post(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          201:
+            description: Email criado com sucesso
+          400:
+            description: Falha ao criar email
+          500:
+            description: Erro interno
+        """
+        try:
+            data = request.get_json()
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            dto = CreateEmailDTO.from_dict(data, id, cpf_usuario)
+            is_successful = self.create_email_use_case.execute(dto)
+            
+            if is_successful:
+                return { "message": "Email criado com sucesso!" }, 201
+            return { "message": "Falha ao criar email!" }, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
 
 # # Blueprint e API registration
-# blueprint_alvo = Blueprint('blueprint_alvo', __name__)
-# api = Api(blueprint_alvo)
+blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
+api = Api(blueprint_suspeito)
 
-# api.add_resource(
-#     SuspeitoController,
-#     '/suspeito',
-#     resource_class_kwargs={'create_alvo_use_case': SuspeitoFactory.create_suspeito()}
-# )
+api.add_resource(
+    SuspeitoController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "atualizar_suspeito": SuspeitoFactory.atualizar_suspeito()
+    }
+)
+
+api.add_resource(
+    SuspeitoCreateController,
+    "/suspeito",
+    resource_class_kwargs={
+        "create_suspeito_use_case": SuspeitoFactory.create_suspeito()
+    }
+)
+
+api.add_resource(
+    SuspeitoDetailController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+    }
+)
+
+api.add_resource(
+    GetEmailController,
+    "/suspeito/<int:id>/email",
+    resource_class_kwargs={
+        "get_all_email_use_case": SuspeitoFactory.get_all_email()
+    }
+)
+
+api.add_resource(
+    ManageEmailController,
+    "/suspeito/<int:id>/email/<int:emailId>",
+    resource_class_kwargs={
+        "create_email_use_case": SuspeitoFactory.create_email(),
+        "delete_email_use_case": SuspeitoFactory.delete_email(),
+    }
+)
