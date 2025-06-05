@@ -14,7 +14,7 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     env:
-      ENV: testing
+      DASHBOARDOP_ENV: testing
     container:
       image: python:3.13.2
     steps:
@@ -43,7 +43,7 @@ jobs:
       image: ruby:3.0
     env:
       API_PREFIX: api
-      ENV: production
+      DASHBOARDOP_ENV: production
       EXTERNAL_PORT: "8000"
       HOST: 0.0.0.0
       FLASK_APP: app/server.py
