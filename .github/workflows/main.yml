@@ -62,6 +62,8 @@ jobs:
       - name: Mark Git directory as safe
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      - name: Unshallow repository
+        run: git fetch --unshallow
 
       - name: Install curl
         run: |
