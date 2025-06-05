@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DASHBOARDOP_ENV: testing
+      DATABASE_URL: postgresql://fake_user:fake_pass@localhost/fake_db  # dummy value
     container:
       image: python:3.13.2
     steps:
