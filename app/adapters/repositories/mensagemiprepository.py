@@ -2,23 +2,23 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List
 from app.infraestructure.database.db import db
-from app.domain.entities.mensagem import Mensagem
 from app.adapters.repositories.entities.mensagens import Mensagem as ORMMensagem
 from app.domain.repositories.mensagemiprepository import IMensagemIPRepository
 from app.application.dto.filtromensagemdto import FiltroMensagemDTO
+from app.application.dto.mensagemresponsedto import MensagemResponseDTO
 
 class MensagemIPRepository(IMensagemIPRepository):
     def __init__(self, session: Session = db.session):
         self.session = session
 
-    def buscar_mensagens_por_ip(self, filtro: FiltroMensagemDTO) -> List[Mensagem]:
+    def buscar_mensagens_por_ip(self, filtro: FiltroMensagemDTO) -> List[MensagemResponseDTO]:
         query = self.session.query(ORMMensagem)
 
         filtros = [
             ORMMensagem.numeroId == filtro.numero,
             or_(
-                ORMMensagem.remetenteIp.in_(filtro.ips),
-                ORMMensagem.destinatario.in_(filtro.ips)
+                ORMMensagem.remetenteIp.in_(filtro.numero),
+                ORMMensagem.destinatario.in_(filtro.numero)
             )
         ]
 

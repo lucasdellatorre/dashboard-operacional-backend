@@ -3,20 +3,12 @@ from flask_restful import Api, Resource, reqparse
 from app.application.factories.mensagemipfactory import MensagemIpFactory
 from app.application.usecases.buscarmensagemporipusecase import BuscarMensagemPorIPUseCase
 from app.application.dto.filtromensagemdto import FiltroMensagemDTO
+from flask import request
 
 class MensagemIPController(Resource):
     def __init__(self, **kwargs):
         self.buscar_mensagem_usecase: BuscarMensagemPorIPUseCase = kwargs["buscar_mensagem_usecase"]
         self.req_parser = reqparse.RequestParser()
-        self.req_parser.add_argument("numero", required=True, type=int, location="args")
-        self.req_parser.add_argument("ips", required=True, action="append", location="args")
-        self.req_parser.add_argument("grupo", type=str, location="args")
-        self.req_parser.add_argument("tipo", type=str, location="args")
-        self.req_parser.add_argument("dataInicial", type=str, location="args")
-        self.req_parser.add_argument("dataFinal", type=str, location="args")
-        self.req_parser.add_argument("horaInicial", type=str, location="args")
-        self.req_parser.add_argument("horaFinal", type=str, location="args")
-        self.req_parser.add_argument("diasSemana", action="append", type=int, location="args")
 
     def get(self):
         """
@@ -68,25 +60,28 @@ class MensagemIPController(Resource):
           500:
             description: Erro interno
         """
+        data = request.get_json()
         try:
-            args = self.req_parser.parse_args()
+            mensagem_por_ip_dto = FiltroMensagemDTO(**data)
 
-            if not args["ips"] or len(args["ips"]) == 0:
-                return {"message": "Informe ao menos um IP."}, 400
+            # args = self.req_parser.parse_args()
 
-            filtro_dto = FiltroMensagemDTO(
-                numero=args["numero"],
-                ips=args["ips"],
-                grupo=args.get("grupo"),
-                tipo=args.get("tipo"),
-                data_inicial=args.get("dataInicial"),
-                data_final=args.get("dataFinal"),
-                hora_inicial=args.get("horaInicial"),
-                hora_final=args.get("horaFinal"),
-                dias_semana=args.get("diasSemana"),
-            )
+            # if not args["ips"] or len(args["ips"]) == 0:
+            #     return {"message": "Informe ao menos um IP."}, 400
 
-            mensagens_response = self.buscar_mensagem_usecase.execute(filtro_dto)
+            # filtro_dto = FiltroMensagemDTO(
+            #     numero=args["numero"],
+            #     ips=args["ips"],  
+            #     grupo=args.get("grupo"),
+            #     tipo=args.get("tipo"),
+            #     data_inicial=args.get("dataInicial"),
+            #     data_final=args.get("dataFinal"),
+            #     hora_inicial=args.get("horaInicial"),
+            #     hora_final=args.get("horaFinal"),
+            #     dias_semana=args.get("diasSemana"),
+            # )
+
+            mensagens_response = self.buscar_mensagem_usecase.execute(mensagem_por_ip_dto)
             return [m.to_dict() for m in mensagens_response], 200
 
         except Exception as e:

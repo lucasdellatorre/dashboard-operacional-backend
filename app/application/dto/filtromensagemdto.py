@@ -5,8 +5,8 @@ from app.domain.entities.mensagem import Mensagem
 class FiltroMensagemDTO:
     def __init__(
         self,
-        numero: int,
-        ips: List[str],
+        numero: List[str],
+        operacoes: List[str] = None,
         grupo: Optional[str] = None,
         tipo: Optional[str] = None,
         data_inicial: Optional[str] = None,
@@ -16,7 +16,7 @@ class FiltroMensagemDTO:
         dias_semana: Optional[List[int]] = None,
     ):
         self.numero = numero
-        self.ips = ips
+        self.operacoes = operacoes
         self.grupo = grupo
         self.tipo = tipo
         self.data_inicial = data_inicial
@@ -28,7 +28,7 @@ class FiltroMensagemDTO:
     def to_dict(self):
         return {
             "numero": self.numero,
-            "ips": self.ips,
+            "operacoes": self.operacoes,
             "grupo": self.grupo,
             "tipo": self.tipo,
             "data_inicial": self.data_inicial,
