@@ -85,7 +85,7 @@ jobs:
         run: |
           heroku config:set \
             DASHBOARDOP_API_PREFIX="$API_PREFIX" \
-            DASHBOARDOP_ENV="$ENV" \
+            DASHBOARDOP_ENV="$DASHBOARDOP_ENV" \
             DASHBOARDOP_EXTERNAL_PORT="$EXTERNAL_PORT" \
             DASHBOARDOP_HOST="$HOST" \
             DATABASE_URL="$DATABASE_URL" \
