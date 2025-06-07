@@ -1,13 +1,22 @@
 # Docker Compose reference guide:
 # https://docs.docker.com/go/compose-spec-reference/
 services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - dashboardop
+    restart: unless-stopped
   server:
     build:
       context: .
       target: base
     stop_signal: SIGINT
     command: >
-      sh -c "flask db upgrade && flask run"
+      sh -c "flask db upgrade && gunicorn 'app.server:create_app()' --bind 0.0.0.0:${DASHBOARDOP_INTERNAL_PORT} --workers=1 --threads=1 --timeout=30"
+
     ports:
       - ${DASHBOARDOP_EXTERNAL_PORT}:${DASHBOARDOP_INTERNAL_PORT}
       
@@ -27,6 +36,8 @@ services:
       - POSTGRESQL_PASSWORD=${POSTGRESQL_PASSWORD}
       - POSTGRESQL_DB=${POSTGRESQL_DB}
       - DATABASE_URL=postgresql+psycopg2://${POSTGRESQL_USERNAME}:${POSTGRESQL_PASSWORD}@${POSTGRESQL_INTERNAL_HOST}:${POSTGRESQL_INTERNAL_PORT}/${POSTGRESQL_DB}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
     develop:
       watch:
         - action: rebuild
