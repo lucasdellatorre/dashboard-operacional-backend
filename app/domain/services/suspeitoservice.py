@@ -79,3 +79,6 @@ class SuspeitoService:
             suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)
             if suspeito:
                 raise ValueError(f"O número {numero_id} já está vinculado ao suspeito '{suspeito.apelido}'.")
+
+    def is_suspeito(self, suspeito_id):
+        return self.suspeito_repository.is_suspeito(suspeito_id)

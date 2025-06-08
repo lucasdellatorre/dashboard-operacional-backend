@@ -249,3 +249,10 @@ class SuspeitoRepository(ISuspeitoRepository):
     def get_all_email(self, suspeito_id):
         results = db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.suspeitoId == suspeito_id).all()
         return [ORMSuspeitoEmail.toSuspeitoEmailEntidade(result) for result in results]
+    
+    def is_suspeito(self, suspeito_id):
+        result = db.session.query(ORMSuspeito).filter(ORMSuspeito.id == suspeito_id)
+        if result: 
+            return True
+        else:
+            return False

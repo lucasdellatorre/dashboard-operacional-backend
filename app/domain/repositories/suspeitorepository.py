@@ -56,3 +56,7 @@ class ISuspeitoRepository(ABC):
         Retorna todos emails do suspeito.
         """
         pass
+
+    @abstractmethod
+    def is_suspeito(self) -> bool:
+        raise(NotImplementedError)
