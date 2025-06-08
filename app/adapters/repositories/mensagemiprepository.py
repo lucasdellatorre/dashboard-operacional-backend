@@ -6,21 +6,16 @@ from app.adapters.repositories.entities.mensagens import Mensagem as ORMMensagem
 from app.domain.repositories.mensagemiprepository import IMensagemIPRepository
 from app.application.dto.filtromensagemdto import FiltroMensagemDTO
 from app.application.dto.mensagemresponsedto import MensagemResponseDTO
+from app.adapters.repositories.entities.mensagens import Mensagem
 
 class MensagemIPRepository(IMensagemIPRepository):
     def __init__(self, session: Session = db.session):
         self.session = session
 
-    def buscar_mensagens_por_ip(self, filtro: FiltroMensagemDTO) -> List[MensagemResponseDTO]:
+    def buscar_mensagens_por_ip(self, filtro: FiltroMensagemDTO) -> List[Mensagem]:
         query = self.session.query(ORMMensagem)
 
-        filtros = [
-            ORMMensagem.numeroId == filtro.numero,
-            or_(
-                ORMMensagem.remetenteIp.in_(filtro.numero),
-                ORMMensagem.destinatario.in_(filtro.numero)
-            )
-        ]
+        filtros = []
 
         if filtro.grupo:
             filtros.append(ORMMensagem.grupoId == filtro.grupo)
