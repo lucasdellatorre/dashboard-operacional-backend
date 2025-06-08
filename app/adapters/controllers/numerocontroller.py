@@ -10,7 +10,7 @@ import time
 class NumeroController(Resource):
     def __init__(self, **kwargs):
         self.get_all_numeros: GetAllNumbersUseCase = kwargs['get_all_numeros']
-        self.adicionar_numeros_suspeito: AdicionaNumeroSuspeitoFactory = kwargs('adicionar_numeros_suspeito')
+        self.adicionar_numeros_suspeito: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numeros_suspeito']
 
     def get(self):
         """
