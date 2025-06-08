@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from flask_restful import Api, Resource
 from app.application.dto.patchnumerosuspeitodto import PatchNumeroSuspeitoDTO
-from app.application.usecases.adicionanumerosuspeitousecase import AdicionarNumerosSuspeitoUseCase
+from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
 from app.application.usecases.getallnumbersusecase import GetAllNumbersUseCase
 from app.application.factories.listanumerofactory import ListaNumerosFactory
 from app.application.factories.adicionanumerosuspeitofactory import AdicionaNumeroSuspeitoFactory
