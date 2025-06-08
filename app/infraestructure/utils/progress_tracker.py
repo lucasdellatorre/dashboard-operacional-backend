@@ -1,16 +1,21 @@
 import redis
 import json
+from urllib.parse import urlparse
 from app.infraestructure.utils.logger import logger
 from app.infraestructure.utils.enviroment import ENVIRONMENT
 
 
 env = ENVIRONMENT().get_instance()
 
-r = redis.Redis(
-    host=env.getRedisHost(),
-    port=int(env.getRedisPort()),
-    decode_responses=True
-)
+if env.env == 'production':
+    url = urlparse(env.getRedisCloud())
+    r = redis.Redis(host=url.hostname, port=url.port, password=url.password, decode_responses=True)
+else:
+    r = redis.Redis(
+        host=env.getRedisHost(),
+        port=int(env.getRedisPort()),
+        decode_responses=True
+    )
 
 def set_job_metadata(job_id: str, nome: str, size: int, data_upload: str):
     r.set(f"job:{job_id}:meta", json.dumps({

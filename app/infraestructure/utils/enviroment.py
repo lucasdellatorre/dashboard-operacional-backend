@@ -15,7 +15,8 @@ class ENVIRONMENT:
         self.pg_password = os.getenv("POSTGRESQL_PASSWORD")
         self.pg_db = os.getenv("POSTGRESQL_DB")
         self.redis_host = os.getenv("REDIS_HOST")
-        self.redis_port = os.getenv("REDIS_PORT")
+        self.redis_port = os.getenv("REDIS_PORT", 6379)
+        self.redis_cloud = os.getenv("REDISCLOUD_URL")
 
     def get_instance(self):
         if not hasattr(self, "_instance"):
@@ -57,6 +58,9 @@ class ENVIRONMENT:
 
     def getRedisPort(self):
         return self.redis_port    
+    
+    def getRedisCloud(self):
+        return self.redis_cloud
 
 host = ENVIRONMENT().get_instance().getHost()
 port = ENVIRONMENT().get_instance().getPort()
