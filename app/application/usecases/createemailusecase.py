@@ -10,8 +10,17 @@ class CreateEmailUseCase:
         suspeito_entity = self.suspeito_service.get_by_id(dto.suspeitoId)
 
         if not suspeito_entity:
-            raise ValueError(f'Não existe um suspeito com o id {dto.suspeitoId}')
+            raise ValueError(f"Não existe um suspeito com o id {dto.suspeitoId}")
 
-        email = SuspeitoEmail(suspeitoId=dto.suspeitoId, lastUpdateCpf=dto.cpf, email=dto.email)
-        
+        # Verifica se o e-mail já existe, comparando diretamente o valor
+        for email_obj in suspeito_entity.emails:
+            if email_obj.email.strip().lower() == dto.email.strip().lower():
+                raise ValueError(f"O e-mail '{dto.email}' já está associado ao suspeito {dto.suspeitoId}")
+
+        email = SuspeitoEmail(
+            suspeitoId=dto.suspeitoId,
+            lastUpdateCpf=dto.cpf,
+            email=dto.email
+        )
+
         return self.suspeito_service.create_email(email)

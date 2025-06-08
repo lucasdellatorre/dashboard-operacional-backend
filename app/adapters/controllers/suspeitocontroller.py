@@ -148,7 +148,7 @@ class GetEmailController(Resource):
         Retorna os emails de um suspeito.
         ---
         tags:
-          - Planilha
+          - Suspeito
         responses:
           200:
             description: Lista de emails
@@ -185,59 +185,35 @@ class GetEmailController(Resource):
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
           
-class ManageEmailController(Resource):
+class CreateEmailController(Resource):
     def __init__(self, **kwargs):
-        self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
         self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
 
-    def delete(self, id: int, emailId: int):
-        """
-        Deleta um email pelo ID do suspeito.
-        ---
-        tags:
-          - Suspeito
-        parameters:
-          - in: path
-            name: id
-            required: true
-            schema:
-              type: integer
-            description: ID do suspeito
-        responses:
-          201:
-            description: Email deletado com sucesso
-          400:
-            description: Falha ao deletar email
-          500:
-            description: Erro interno
-        """    
-        try:
-            cpf_usuario = request.headers.get("cpfUsuario")
-            
-            is_successful = self.delete_email_use_case.execute(id, emailId)
-            
-            if is_successful:
-                return { "message": "Email deletado com sucesso!" }, 201
-            return { "message": "Falha ao deletar email!" }, 400
-            
-        except Exception as e:
-            print(f"[ERROR] {e}")
-            return {"message": "Erro interno no servidor"}, 500
-        
     def post(self, id: int):
         """
-        Busca os dados detalhados de um suspeito pelo ID.
+        Adiciona um email ao suspeito identificado pelo ID.
         ---
         tags:
           - Suspeito
+        consumes:
+          - application/json
         parameters:
           - in: path
             name: id
             required: true
+            description: ID do suspeito
             schema:
               type: integer
-            description: ID do suspeito
+          - in: header
+            name: cpfUsuario
+            required: true
+            description: CPF do usuário autenticado
+            schema:
+              type: string
+              example: "12345678900"
           - in: body
+            name: body
+            description: Payload para criar email
             required: true
             schema:
               type: object
@@ -246,12 +222,7 @@ class ManageEmailController(Resource):
               properties:
                 email:
                   type: string
-          - in: header
-            name: cpfUsuario
-            required: true
-            schema:
-              type: string
-              example: "12345678900"
+                  example: "exemplo@dominio.com"
         responses:
           201:
             description: Email criado com sucesso
@@ -270,9 +241,61 @@ class ManageEmailController(Resource):
             if is_successful:
                 return { "message": "Email criado com sucesso!" }, 201
             return { "message": "Falha ao criar email!" }, 400
+        except ValueError as e:
+            return { "message": str(e) }, 400
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+        
+class DeleteEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
+
+    def delete(self, id: int, emailId: int):
+        """
+        Deleta um email pelo ID do suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+              description: ID do suspeito
+          - in: path
+            name: emailId
+            required: true
+            schema:
+              type: integer
+              description: ID do email
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          200:
+            description: Email deletado com sucesso
+          400:
+            description: Falha ao deletar email
+          500:
+            description: Erro interno
+        """    
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            is_successful = self.delete_email_use_case.execute(id, emailId)
+            
+            if is_successful:
+                return { "message": "Email deletado com sucesso!" }, 200
+            return { "message": "Falha ao deletar email!" }, 400
+            
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+        
 class ManageNumeroController(Resource):
     def __init__(self, **kwargs):
         self.delete_numero_use_case:DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
@@ -352,11 +375,18 @@ api.add_resource(
 )
 
 api.add_resource(
-    ManageEmailController,
+    CreateEmailController,
+    "/suspeito/<int:id>/email",
+    resource_class_kwargs={
+        "create_email_use_case": SuspeitoFactory.create_email()
+    }
+)
+
+api.add_resource(
+    DeleteEmailController,
     "/suspeito/<int:id>/email/<int:emailId>",
     resource_class_kwargs={
-        "create_email_use_case": SuspeitoFactory.create_email(),
-        "delete_email_use_case": SuspeitoFactory.delete_email(),
+        "delete_email_use_case": SuspeitoFactory.delete_email()
     }
 )
 
