@@ -21,7 +21,12 @@ class Suspeito(db.Model):
         cascade="all, delete-orphan"
     )
 
-    numero_suspeitos = relationship("NumeroSuspeito", back_populates="suspeito", lazy="joined")
+    numero_suspeitos = relationship(
+        "NumeroSuspeito",
+        back_populates="suspeito",
+        lazy="joined",
+        cascade="all, delete-orphan"
+    )
     
     @staticmethod
     def fromSuspeitoEntidade(SuspeitoEntidade: SuspeitoEntidade) -> "Suspeito":

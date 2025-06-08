@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm.exc import NoResultFound
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
@@ -18,20 +19,53 @@ class SuspeitoRepository(ISuspeitoRepository):
     def __init__(self, session: Session = db.session):
         self.session = session
 
-    def atualizar(self, id: int, dados: dict):
-        suspeito = self.session.query(ORMSuspeito).get(id)
-        if not suspeito:
-            raise LookupError("Suspeito não encontrado.")
+    def deletar(self, id: int) -> None:
+        try:
+            suspeito = self.session.query(ORMSuspeito).filter_by(id=id).one()
+            self.session.delete(suspeito)
+            self.session.commit()
+        except NoResultFound:
+            raise LookupError(f"Suspeito com ID {id} não encontrado.")
+        except Exception as e:
+            self.session.rollback()
+            raise e
         
-        suspeito.lastUpdateDate = datetime.now()
-        suspeito.lastUpdateCpf = dados['lastUpdateCpf']
 
-        for campo in ['nome', 'cpf', 'apelido', 'anotacoes', 'relevante']:
-            if campo in dados:
-                setattr(suspeito, campo, dados[campo])
+    def atualizar(self, entity: SuspeitoEntity):
+        orm_obj = self.session.query(ORMSuspeito).get(entity.id)
+        if not orm_obj:
+            raise LookupError("Suspeito não encontrado.")
+
+        orm_obj.nome = entity.nome
+        orm_obj.cpf = entity.cpf
+        orm_obj.apelido = entity.apelido
+        orm_obj.anotacoes = entity.anotacoes
+        orm_obj.relevante = entity.relevante
+        orm_obj.lastUpdateDate = entity.lastUpdateDate
+        orm_obj.lastUpdateCpf = entity.lastUpdateCpf
 
         self.session.commit()
-        return ORMSuspeito.toEntity(suspeito)
+        return ORMSuspeito.toEntity(orm_obj)
+    
+    def get_by_id(self, id: int) -> SuspeitoEntity | None:
+        orm_obj = db.session.query(ORMSuspeito).filter_by(id=id).first()
+
+        if not orm_obj:
+            return None
+
+        return SuspeitoEntity(
+            id=orm_obj.id,
+            nome=orm_obj.nome,
+            apelido=orm_obj.apelido,
+            cpf=orm_obj.cpf,
+            relevante=orm_obj.relevante,
+            anotacoes=orm_obj.anotacoes,
+            lastUpdateDate=orm_obj.lastUpdateDate,
+            lastUpdateCpf=orm_obj.lastUpdateCpf,
+            emails=[],  # omitido propositalmente
+            numerosuspeito=[]  # omitido propositalmente
+        )
+            
 
     def get_by_id_with_relations(self, id: int) -> SuspeitoEntity | None:
         orm_obj = (
@@ -249,3 +283,21 @@ class SuspeitoRepository(ISuspeitoRepository):
     def get_all_email(self, suspeito_id):
         results = db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.suspeitoId == suspeito_id).all()
         return [ORMSuspeitoEmail.toSuspeitoEmailEntidade(result) for result in results]
+    
+    def get_email_by_id(self, email_id: int) -> SuspeitoEmailEntity | None:
+        orm_email = db.session.query(ORMSuspeitoEmail).filter_by(id=email_id).first()
+        if not orm_email:
+            return None
+        return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)
+
+    def update_email(self, email: SuspeitoEmailEntity) -> SuspeitoEmailEntity:
+        orm_email = db.session.query(ORMSuspeitoEmail).filter_by(id=email.id).first()
+        if not orm_email:
+            raise LookupError(f"E-mail com ID {email.id} não encontrado.")
+
+        orm_email.email = email.email
+        orm_email.lastUpdateCpf = email.lastUpdateCpf
+        orm_email.lastUpdateDate = email.lastUpdateDate
+
+        db.session.commit()
+        return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)    
