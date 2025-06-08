@@ -54,6 +54,7 @@ jobs:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_APP_NAME_BACKEND: ${{ secrets.HEROKU_APP_NAME_BACKEND }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      REDISCLOUD_URL: ${{ secrets.REDISCLOUD_URL }}
 
     steps:
       - name: Checkout code
@@ -89,6 +90,7 @@ jobs:
             DASHBOARDOP_EXTERNAL_PORT="$EXTERNAL_PORT" \
             DASHBOARDOP_HOST="$HOST" \
             DATABASE_URL="$DATABASE_URL" \
+            REDISCLOUD_URL="$REDISCLOUD_URL" \
             FLASK_APP="$FLASK_APP" \
             FLASK_DEBUG="$FLASK_DEBUG" \
             FLASK_ENV="$FLASK_ENV" \
