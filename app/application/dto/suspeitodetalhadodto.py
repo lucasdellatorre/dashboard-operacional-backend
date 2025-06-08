@@ -58,6 +58,7 @@ class SuspeitoDetalhadoDTO:
             anotacoes=entity.anotacoes,
             emails=[
                 {
+                    "id": email.id,
                     "email": email.email,
                     "lastUpdateCpf": email.lastUpdateCpf,
                     "lastUpdateDate": email.lastUpdateDate,
@@ -66,6 +67,7 @@ class SuspeitoDetalhadoDTO:
             ],
             celulares=[
                 {
+                    "id": numero_suspeito.numero.id,
                     "numero": numero_suspeito.numero.numero,
                     "lastUpdateCpf": numero_suspeito.lastUpdateCpf,
                     "lastUpdateDate": numero_suspeito.lastUpdateDate,
