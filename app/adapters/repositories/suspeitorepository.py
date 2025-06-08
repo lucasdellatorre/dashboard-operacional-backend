@@ -9,7 +9,7 @@ from app.domain.entities.numero import Numero as NumeroEntity
 from app.domain.entities.suspeitoemail import SuspeitoEmail as SuspeitoEmailEntity
 from app.domain.entities.ip import IP as IPEntity
 from app.adapters.repositories.entities.suspeito import Suspeito as ORMSuspeito
-from app.adapters.repositories.entities.numero import Numero as ORMSNumero
+from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito as ORMNumeroSuspeito
 from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as ORMSuspeitoEmail
 from app.infraestructure.database.db import db
@@ -74,7 +74,7 @@ class SuspeitoRepository(ISuspeitoRepository):
                 joinedload(ORMSuspeito.emails),
                 joinedload(ORMSuspeito.numero_suspeitos)
                 .joinedload(ORMNumeroSuspeito.numero)
-                .joinedload(ORMSNumero.ips)
+                .joinedload(ORMNumero.ips)
             )
             .filter(ORMSuspeito.id == id)
             .first()
@@ -131,6 +131,20 @@ class SuspeitoRepository(ISuspeitoRepository):
             emails=emails,
             numerosuspeito=numeros
         )
+    
+    def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[str]:
+
+        if not suspeito_ids:
+            return []
+
+        results = (
+            db.session.query(ORMNumero.numero)
+            .join(ORMNumeroSuspeito, ORMNumero.id == ORMNumeroSuspeito.numeroId)
+            .filter(ORMNumeroSuspeito.suspeitoId.in_(suspeito_ids))
+            .all()
+        )
+
+        return [r[0] for r in results]  # extrai os valores do resultado do SQLAlchemy
     
     def get_by_numero_id_with_relations(self, numero_id: int) -> SuspeitoEntity | None:
         numero_suspeito = (

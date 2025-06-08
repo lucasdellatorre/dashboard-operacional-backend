@@ -23,6 +23,10 @@ class ISuspeitoRepository(ABC):
         pass
 
     @abstractmethod
+    def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[str]:
+        pass
+
+    @abstractmethod
     def get_by_numero_id_with_relations(self, numero_id: int) -> Suspeito | None:
         """
         Busca o suspeito relacionado a um número (se existir),

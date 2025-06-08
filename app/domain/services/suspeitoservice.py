@@ -17,7 +17,11 @@ class SuspeitoService:
 
     def get_by_id(self, id: int) -> SuspeitoEntity | None:
         return self.suspeito_repository.get_by_id_with_relations(id)
-
+    
+    def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[dict]:
+        numeros = self.suspeito_repository.get_numeros_by_suspeito_ids(suspeito_ids)
+        return [{"numero": numero} for numero in numeros]
+            
     def get_suspeito_by_numero_id(self, numero_id: int) -> dict | None:
         suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)
         if not suspeito:
