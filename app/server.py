@@ -18,7 +18,7 @@ from app.adapters.controllers.suspeitoemailcontroller import blueprint_suspeito_
 from app.adapters.controllers.alvosoperacaocontroller import blueprint_numeros_operacao
 from app.adapters.controllers.alvocontroller import blueprint_alvo
 from app.adapters.controllers.uploadtrackercontroller import blueprint_progress
-
+from app.adapters.controllers.mensagemdashboardcontroller import blueprint_mensagens
 def create_app():
     # ============================================
     # Main
@@ -83,7 +83,8 @@ def create_app():
         blueprint_suspeito,
         blueprint_alvo,
         blueprint_progress,
-        blueprint_suspeito_email
+        blueprint_suspeito_email,
+        blueprint_mensagens
     ]
 
     for blueprint in blueprint_list:

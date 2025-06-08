@@ -75,3 +75,18 @@ class InterceptacaoNumeroRepository(IInterceptacaoNumeroRepository):
             .distinct(Numero.id)
         )
         return [dict(row._mapping) for row in query.all()]
+    
+    def get_alvos_by_interceptacoes(self, tickets: list[str]) -> list[dict]:
+        query = (
+            self.session.query(
+                Numero.id.label("id"),
+                Numero.numero.label("numero")
+            )
+            .join(InterceptacaoNumero, InterceptacaoNumero.numeroId == Numero.id)
+            .filter(
+                InterceptacaoNumero.interceptacaoId.in_(tickets),
+                InterceptacaoNumero.isAlvo == True
+            )
+            .distinct(Numero.id)
+        )
+        return [dict(row._mapping) for row in query.all()]
