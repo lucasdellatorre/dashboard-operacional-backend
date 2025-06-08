@@ -16,6 +16,7 @@ from app.adapters.controllers.ipcontroller import blueprint_ip
 from app.adapters.controllers.suspeitocontroller import blueprint_suspeito
 from app.adapters.controllers.alvosoperacaocontroller import blueprint_numeros_operacao
 from app.adapters.controllers.alvocontroller import blueprint_alvo
+from app.adapters.controllers.uploadtrackercontroller import blueprint_progress
 
 def create_app(config_class=None):
     # ============================================
@@ -79,7 +80,8 @@ def create_app(config_class=None):
         blueprint_ip,
         blueprint_numeros_operacao, 
         blueprint_suspeito,
-        blueprint_alvo
+        blueprint_alvo,
+        blueprint_progress
     ]
 
     for blueprint in blueprint_list:
