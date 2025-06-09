@@ -55,3 +55,25 @@ class IMensagemRepository(ABC):
         }
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def contar_mensagens_por_dia(
+        self,
+        numeros: List[str],
+        tickets: List[str],
+        tipo: str,
+        grupo: str,
+        data_inicial: str,
+        data_final: str,
+        hora_inicio: str,
+        hora_fim: str
+    ) -> List[dict]:
+        """
+        Retorna uma lista com a contagem de mensagens por dia, com base nos filtros fornecidos.
+        Cada item do resultado é um dicionário com:
+        {
+            "data": str,            # Ex: "2023-10-01"
+            "qtdMensagens": int
+        }
+        """
+        raise NotImplementedError
