@@ -18,12 +18,12 @@ class MensagensRequestDTO:
             raise ValueError("A lista de operações é obrigatória e deve ser uma lista.")
 
         # Valores padrões
-        grupo = data.get("grupo", "all").lower()
-        if grupo and grupo not in ["group", "number", "all"]:
+        grupo = data.get("grupo", "all")
+        if grupo and grupo.lower() not in ["group", "number", "all"]:
             raise ValueError("Grupo inválido. Valores permitidos: group, number, all.")
 
-        tipo = data.get("tipo", "all").lower()
-        if tipo and tipo not in ["image", "audio", "video", "text", "all"]:
+        tipo = data.get("tipo", "all")
+        if tipo and tipo.lower() not in ["image", "audio", "video", "text", "all"]:
             raise ValueError("Tipo inválido. Valores permitidos: image, audio, video, text all")
 
         return cls(
