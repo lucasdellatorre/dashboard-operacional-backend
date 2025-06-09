@@ -1,12 +1,16 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
+from app.application.dto.patchnumerosuspeitodto import PatchNumeroSuspeitoDTO
 from app.application.factories.suspeitofactory import SuspeitoFactory
+from app.application.factories.numerosuspeitofactory import NumeroSuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
 from app.application.dto.createemaildto import CreateEmailDTO
+from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase
 from app.application.usecases.suspeitousecase import SuspeitoUseCase
+from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
 
 class SuspeitoController(Resource):
     def __init__(self, **kwargs):
@@ -106,6 +110,7 @@ class SuspeitoCreateController(Resource):
 class SuspeitoDetailController(Resource):
     def __init__(self, **kwargs):
         self.get_suspeito_by_id_use_case = kwargs['get_suspeito_by_id_use_case']
+        self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
 
     def get(self, id: int):
         """
@@ -136,6 +141,59 @@ class SuspeitoDetailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+    def patch(self, id: int):
+        """
+        Adiciona uma lista de telefones para um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - numerosIds
+              properties:
+                numerosIds:
+                  type: array
+                  items:
+                    type: integer
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        
+        data = request.get_json()
+        cpfUsuario = request.headers.get("cpfUsuario")
+        try:
+            numero_suspeito_dto = PatchNumeroSuspeitoDTO(**data | { 'cpf': cpfUsuario, 'suspeitoId': id })
+            result = self.adicionar_numero_suspeito_use_case.execute(numero_suspeito_dto)
+            if result:
+              return { 'Message:': 'números adicionados com sucesso!' }, 200
+            return { 'Message:': 'erro ao adicionar números' }, 400
+        except ValueError as ve:
+            return {'message': str(ve)}, 404
+        except Exception as e:
+            print(f'[ERRO PATCH /numeros]: {e}')
+            return {'message': 'Erro interno no servidor.'}, 500
         
 class GetEmailController(Resource):
     def __init__(self, **kwargs):
@@ -271,6 +329,48 @@ class ManageEmailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+class ManageNumeroController(Resource):
+    def __init__(self, **kwargs):
+        self.delete_numero_use_case:DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
+
+    def delete(self, id: int, numeroId: int):
+        """
+        Remove a associação de um número com um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            description: ID do suspeito
+            schema:
+              type: integer
+          - in: path
+            name: numeroId
+            required: true
+            description: ID do número
+            schema:
+              type: integer
+        responses:
+          200:
+            description: Associação removida com sucesso
+          400:
+            description: Não é permitido remover o único número vinculado ao suspeito.
+          500:
+            description: Erro interno
+        """
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            is_removed = self.delete_numero_use_case.execute(id, numeroId)
+            if is_removed:
+                return { "message": "Número desvinculado com sucesso." }, 200
+            return { "message": "Não é permitido remover o único número vinculado ao suspeito." }, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+
 
 # # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
@@ -296,7 +396,8 @@ api.add_resource(
     SuspeitoDetailController,
     "/suspeito/<int:id>",
     resource_class_kwargs={
-        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id(),
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
     }
 )
 
@@ -314,5 +415,13 @@ api.add_resource(
     resource_class_kwargs={
         "create_email_use_case": SuspeitoFactory.create_email(),
         "delete_email_use_case": SuspeitoFactory.delete_email(),
+    }
+)
+
+api.add_resource(
+    ManageNumeroController,
+    "/suspeito/<int:id>/numero/<int:numeroId>",
+    resource_class_kwargs={
+        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number()
     }
 )

@@ -64,6 +64,9 @@ class SuspeitoService:
     def delete_email(self, suspeito_id, email_id):
         return self.suspeito_repository.delete_email(suspeito_id, email_id)
     
+    def add_telefone(self, suspeito_id, numeros, cpf):
+        return self.suspeito_repository.add_telefone(suspeito_id, numeros, cpf)
+    
     def get_all_email(self, suspeito_id):
         return self.suspeito_repository.get_all_email(suspeito_id)
             

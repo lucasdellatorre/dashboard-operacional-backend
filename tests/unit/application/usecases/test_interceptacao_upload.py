@@ -1,100 +1,92 @@
-import io
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from flask import Flask
+from io import BytesIO
 from app.application.dto.interceptacaouploaddto import InterceptacaoUploadDTO
 from app.application.usecases.interceptacaouploadusecase import InterceptacaoUploadUseCase
 
 
-class FakeFile:
-    def __init__(self, filename, content=b"data"):
-        self.filename = filename
-        self.stream = io.BytesIO(content)
-        self._file = self.stream
-    def seek(self, offset, whence=0):
-        return self.stream.seek(offset, whence)
-    def tell(self):
-        return self.stream.tell()
+@pytest.fixture
+def fake_app():
+    app = Flask(__name__)
+    with app.app_context():
+        yield app
 
 
 @pytest.fixture
-def upload_service_mock():
-    mock = Mock()
-    # By default allow all files for simple tests
-    mock.allowed_file.return_value = True
-    return mock
+def mock_upload_service():
+    service = Mock()
+    service.allowed_file.return_value = True
+    return service
 
 
 @pytest.fixture
-def operacao_service_mock():
-    mock = Mock()
-    mock.hasOperacao.return_value = True
-    return mock
+def mock_operacao_service():
+    service = Mock()
+    service.hasOperacao.return_value = True
+    return service
 
 
-def test_execute_success(upload_service_mock, operacao_service_mock):
-    # Arrange
-    file = FakeFile(filename="file.xlsx", content=b"12345"*1024)  # 5KB data
-    dto = Mock(spec=InterceptacaoUploadDTO)
-    dto.file = file
-    dto.operacao_id = "1"
-
-    use_case = InterceptacaoUploadUseCase(upload_service_mock, operacao_service_mock)
-
-    # Act
-    use_case.execute(dto)
-
-    # Assert
-    upload_service_mock.allowed_file.assert_called_once_with("file.xlsx")
-    operacao_service_mock.hasOperacao.assert_called_once_with(1)
-    upload_service_mock.save.assert_called_once()
-
-    args, kwargs = upload_service_mock.save.call_args
-    assert kwargs['filename'] == "file.xlsx"
-    assert kwargs['operacao_id'] == "1"
-    # File size in KB, approx 5KB
-    assert kwargs['file_size'] >= 5
+@pytest.fixture
+def usecase(mock_upload_service, mock_operacao_service):
+    return InterceptacaoUploadUseCase(mock_upload_service, mock_operacao_service)
 
 
-def test_execute_raises_when_file_none(upload_service_mock, operacao_service_mock):
-    dto = Mock(spec=InterceptacaoUploadDTO)
+def make_dto(filename="test.csv", content=b"example", operacaoId="1"):
+    file = Mock()
+    file.filename = filename
+    file.read.return_value = content
+    return InterceptacaoUploadDTO(file=file, operacaoId=operacaoId)
+
+
+def test_validate_success(usecase):
+    dto = make_dto()
+    usecase.validate(dto)  # Should not raise any exception
+
+
+def test_validate_file_none(usecase):
+    dto = make_dto()
     dto.file = None
-    dto.operacao_id = "1"
-    use_case = InterceptacaoUploadUseCase(upload_service_mock, operacao_service_mock)
-
     with pytest.raises(ValueError, match="file not found!"):
-        use_case.execute(dto)
+        usecase.validate(dto)
 
 
-def test_execute_raises_when_filename_none(upload_service_mock, operacao_service_mock):
-    file = FakeFile(filename=None)
-    dto = Mock(spec=InterceptacaoUploadDTO)
-    dto.file = file
-    dto.operacao_id = "1"
-    use_case = InterceptacaoUploadUseCase(upload_service_mock, operacao_service_mock)
-
+def test_validate_filename_none(usecase):
+    dto = make_dto()
+    dto.file.filename = None
     with pytest.raises(ValueError, match="filename not found!"):
-        use_case.execute(dto)
+        usecase.validate(dto)
 
 
-def test_execute_raises_when_file_extension_not_allowed(upload_service_mock, operacao_service_mock):
-    file = FakeFile(filename="file.exe")
-    dto = Mock(spec=InterceptacaoUploadDTO)
-    dto.file = file
-    dto.operacao_id = "1"
-    upload_service_mock.allowed_file.return_value = False
-    use_case = InterceptacaoUploadUseCase(upload_service_mock, operacao_service_mock)
-
+def test_validate_extension_not_allowed(usecase, mock_upload_service):
+    dto = make_dto()
+    mock_upload_service.allowed_file.return_value = False
     with pytest.raises(ValueError, match="file extension not allowed!"):
-        use_case.execute(dto)
+        usecase.validate(dto)
 
 
-def test_execute_raises_when_operacao_id_not_exist(upload_service_mock, operacao_service_mock):
-    file = FakeFile(filename="file.xlsx")
-    dto = Mock(spec=InterceptacaoUploadDTO)
-    dto.file = file
-    dto.operacao_id = "999"
-    operacao_service_mock.hasOperacao.return_value = False
-    use_case = InterceptacaoUploadUseCase(upload_service_mock, operacao_service_mock)
-
+def test_validate_invalid_operacao(usecase, mock_operacao_service):
+    dto = make_dto()
+    mock_operacao_service.hasOperacao.return_value = False
     with pytest.raises(ValueError, match="operation id does not exist!"):
-        use_case.execute(dto)
+        usecase.validate(dto)
+
+
+@patch("app.application.usecases.interceptacaouploadusecase.set_progress")
+@patch("app.application.usecases.interceptacaouploadusecase.logger")
+def test_start_upload_triggers_thread(mock_logger, mock_set_progress, usecase, fake_app):
+    dto = make_dto()
+    job_id = "1234"
+
+    # Espera que o método upload_service.save seja chamado com os parâmetros corretos
+    usecase.upload_service.save = Mock()
+
+    with fake_app.app_context():
+        usecase.start_upload(dto, job_id)
+
+        # Dá um tempo pequeno para a thread começar
+        import time
+        time.sleep(0.1)
+
+        usecase.upload_service.save.assert_called_once()
+        mock_set_progress.assert_any_call(job_id, "Processando upload", 10)

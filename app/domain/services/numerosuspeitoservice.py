@@ -11,3 +11,9 @@ class NumeroSuspeitoService():
         
     def adicionar_numeros_suspeito(self, cpf, suspeito_id, numero_id):
         return self.repository.adicionar_numeros_suspeito(cpf, suspeito_id, numero_id)
+
+    def remover_relacionamento(self, suspeito_id: int, numero_id: int) -> bool:
+        count = self.repository.count_by_suspeito(suspeito_id)
+        if count <= 1:
+            return False
+        return self.repository.delete_relacao(suspeito_id, numero_id)

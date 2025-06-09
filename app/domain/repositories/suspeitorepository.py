@@ -60,3 +60,10 @@ class ISuspeitoRepository(ABC):
     @abstractmethod
     def is_suspeito(self) -> bool:
         raise(NotImplementedError)
+    
+    @abstractmethod
+    def add_telefone(self, suspeito_id, telefones, cpf) -> bool:
+        """
+        Adiciona telefones novos para um suspeito
+        """
+        pass

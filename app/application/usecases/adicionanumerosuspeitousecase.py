@@ -7,12 +7,17 @@ class AdicionaNumeroSuspeitoUseCase:
         self.numero_service = numero_service
         self.suspeito_service = suspeito_service
 
-    def execute(self, request: PatchNumeroSuspeitoDTO):
-        numeros_ids = request.numero_id
+    def execute(self, request: PatchNumeroSuspeitoDTO) -> bool:
+        numeros_ids = request.numerosIds
+        res = []
         
-        for numero_id in numeros_ids:
-            if not(self.numero_service.isNumero(numero_id)):
+        for numeroId in numeros_ids:
+            if not(self.numero_service.isNumero(numeroId)):
                 return False
         
-        if not self.suspeito_service.is_suspeito(request.suspeito_id): 
-            return False
+            if not self.suspeito_service.is_suspeito(request.suspeitoId): 
+                return False
+            
+            res.append(self.suspeito_service.add_telefone(request.suspeitoId, numeroId, request.cpf))
+        
+        return all(res)

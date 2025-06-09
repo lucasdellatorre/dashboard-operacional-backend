@@ -1,11 +1,9 @@
-from dataclasses import dataclass, field
-from datetime import datetime
-
+from dataclasses import dataclass
 
 @dataclass
 class PatchNumeroSuspeitoDTO():
-    numero_id: list[int]
-    suspeito_id: int
+    numerosIds: list[int]
+    suspeitoId: int
     cpf: str
-    lastUpdateDate: datetime = field(default_factory = datetime.now(), init = False)
+    
     

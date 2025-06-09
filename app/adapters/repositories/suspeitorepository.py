@@ -11,6 +11,7 @@ from app.adapters.repositories.entities.suspeito import Suspeito as ORMSuspeito
 from app.adapters.repositories.entities.numero import Numero as ORMSNumero
 from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito as ORMNumeroSuspeito
 from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as ORMSuspeitoEmail
+from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.infraestructure.database.db import db
 from app.infraestructure.utils.logger import logger
 
@@ -256,3 +257,33 @@ class SuspeitoRepository(ISuspeitoRepository):
             return True
         else:
             return False
+        
+    def add_telefone(self, suspeito_id, telefoneId, cpf) -> bool:
+        suspeito: ORMSuspeito = self.session.query(ORMSuspeito).get(suspeito_id)
+        if not suspeito:
+            return False                   
+
+        numero_orm: ORMNumero = self.session.query(ORMNumero).get(telefoneId)
+        
+        if not numero_orm:
+            return False
+
+        exists = self.session.query(ORMNumeroSuspeito).filter_by(
+            suspeitoId=suspeito.id,
+            numeroId=numero_orm.id
+        ).first()
+        if exists:
+            return True 
+
+        self.session.add(
+            ORMNumeroSuspeito(
+                suspeitoId=suspeito.id,
+                numeroId=numero_orm.id,
+                lastUpdateDate=datetime.now(),
+                lastUpdateCpf=cpf
+            )
+        )
+        
+        self.session.commit()
+
+        return True
