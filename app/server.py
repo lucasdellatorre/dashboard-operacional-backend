@@ -20,6 +20,7 @@ from app.adapters.controllers.alvocontroller import blueprint_alvo
 from app.adapters.controllers.uploadtrackercontroller import blueprint_progress
 from app.adapters.controllers.mensagemdashboardcontroller import blueprint_mensagens
 from app.adapters.controllers.mensagenshorariocontroller import blueprint_mensagens_horario
+from app.adapters.controllers.exportcontroller import blueprint_export
 
 def create_app():
     # ============================================
@@ -87,7 +88,8 @@ def create_app():
         blueprint_progress,
         blueprint_suspeito_email,
         blueprint_mensagens,
-        blueprint_mensagens_horario
+        blueprint_mensagens_horario,
+        blueprint_export
     ]
 
     for blueprint in blueprint_list:

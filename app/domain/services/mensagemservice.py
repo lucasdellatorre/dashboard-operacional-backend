@@ -1,4 +1,6 @@
 from collections import defaultdict
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.mensagemrepository import IMensagemRepository
 from app.domain.entities.numero import Numero
 from app.application.dto.mensagensrequestdto import MensagensRequestDTO
@@ -7,21 +9,21 @@ from typing import List, Dict
 class MensagemService():
     def __init__(self, mensagem_repository: IMensagemRepository):
         self.repository = mensagem_repository
-        
+
     def count_mensagens_por_alvo(self, numero: Numero) -> dict[str, int]:
         mensagens = self.repository.get_mensagens_from_numero_id(numero.id)
         mem = defaultdict(int)
-        
+
         for mensagem in mensagens:
             numero_alvo = numero.numero
             remetente = mensagem.remetente
             destinatario = mensagem.destinatario
-            
+
             if remetente == numero_alvo:
                 mem[destinatario] += 1
             elif destinatario == numero_alvo:
                 mem[remetente] += 1
-                
+
         return dict(mem)    
     
     def obter_quantidade_mensagens_por_contato(
@@ -72,3 +74,16 @@ class MensagemService():
             hora_fim=hora_fim
         )
         return resultados
+
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
+        return self.repository.buscar_por_filtro(
+            numeros=filtro.numero,
+            tickets=filtro.operacoes,
+            tipo=filtro.tipo,
+            grupo=filtro.grupo,
+            data_inicial=filtro.data_inicial,
+            data_final=filtro.data_final,
+            hora_inicio=filtro.hora_inicial,
+            hora_fim=filtro.hora_final,
+            dias_semana=filtro.dias_semana,
+        )
