@@ -11,8 +11,7 @@ class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
 class StagingConfig(Config):
-    DEVELOPMENT = True
-    DEBUG = True
+    DEBUG = False
     SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
 class DevelopmentConfig(Config):
@@ -20,11 +19,12 @@ class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = databaseUrl.replace("postgres://", "postgresql+psycopg2://", 1)
 
-
 class TestingConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
     
 class LocalConfig(Config):
+    DEBUG = True
     SQLALCHEMY_DATABASE_URI=f'postgresql+psycopg2://{pgUsername}:{pgPassword}@localhost:{pgInternalPort}/{pgDbName}'
 
 class ConfigFactory():

@@ -15,3 +15,7 @@ class IInterceptacaoNumeroRepository(ABC):
         Retorna todos os números interceptados
         """
         pass
+
+    @abstractmethod
+    def get_alvos_by_interceptacoes(self, tickets: list[str]) -> list[str]:
+        pass

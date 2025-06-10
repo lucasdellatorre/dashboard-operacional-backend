@@ -14,8 +14,12 @@ from app.adapters.controllers.planilhacontroller import blueprint_planilha
 from app.adapters.controllers.numerocontroller import blueprint_numero
 from app.adapters.controllers.ipcontroller import blueprint_ip
 from app.adapters.controllers.suspeitocontroller import blueprint_suspeito
+from app.adapters.controllers.suspeitoemailcontroller import blueprint_suspeito_email
 from app.adapters.controllers.alvosoperacaocontroller import blueprint_numeros_operacao
 from app.adapters.controllers.alvocontroller import blueprint_alvo
+from app.adapters.controllers.uploadtrackercontroller import blueprint_progress
+from app.adapters.controllers.mensagemdashboardcontroller import blueprint_mensagens
+from app.adapters.controllers.mensagenshorariocontroller import blueprint_mensagens_horario
 from app.adapters.controllers.teiaipcontroller import blueprint_teia_ip
 
 def create_app(config_class=None):
@@ -26,7 +30,7 @@ def create_app(config_class=None):
     app = Flask(__name__)
     CORS(app)
     Api(app, prefix=prefix)
-    config = config_class if config_class else ConfigFactory().get_config()
+    config = ConfigFactory().get_config()
     app.config.from_object(config)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ECHO'] = False
@@ -81,7 +85,11 @@ def create_app(config_class=None):
         blueprint_ip,
         blueprint_numeros_operacao, 
         blueprint_suspeito,
-        blueprint_alvo
+        blueprint_alvo,
+        blueprint_progress,
+        blueprint_suspeito_email,
+        blueprint_mensagens,
+        blueprint_mensagens_horario
     ]
 
     for blueprint in blueprint_list:

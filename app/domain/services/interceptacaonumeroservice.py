@@ -13,3 +13,9 @@ class InterceptacaoNumeroService:
     
     def get_all_numeros(self) -> list[dict]:
         return self.repository.get_all_alvos()
+    
+    def get_alvos_por_interceptacoes(self, tickets: list[str]) -> list[dict]:
+        if not tickets:
+            return []
+        
+        return self.repository.get_alvos_by_interceptacoes(tickets)
