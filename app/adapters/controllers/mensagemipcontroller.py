@@ -1,14 +1,13 @@
 from flask import Blueprint
 from flask_restful import Api, Resource, reqparse
+from app.application.dto.mensagensrequestdto import MensagensRequestDTO
 from app.application.factories.mensagemipfactory import MensagemIpFactory
 from app.application.usecases.buscarmensagemporipusecase import BuscarMensagemPorIPUseCase
-from app.application.dto.filtromensagemdto import FiltroMensagemDTO
 from flask import request
 
 class MensagemIPController(Resource):
     def __init__(self, **kwargs):
         self.buscar_mensagem_usecase: BuscarMensagemPorIPUseCase = kwargs["buscar_mensagem_usecase"]
-        self.req_parser = reqparse.RequestParser()
 
     def get(self):
         """
@@ -60,28 +59,22 @@ class MensagemIPController(Resource):
           500:
             description: Erro interno
         """
-        data = request.get_json()
         try:
-            mensagem_por_ip_dto = FiltroMensagemDTO(**data)
+            data = request.args.to_dict(flat=False)
 
-            # args = self.req_parser.parse_args()
+            dto = MensagensRequestDTO.from_dict({
+                "numeros": data.get("numeros", []) or data.get("numeros[]", []),
+                "suspeitos": data.get("suspeitos", []) or data.get("suspeitos[]", []),
+                "operacoes": data.get("operacoes", []) or data.get("operacoes[]", []),
+                "grupo": request.args.get("grupo", "AMBOS"),
+                "tipo": request.args.get("tipo", "TODOS"),
+                "data_inicial": request.args.get("data_inicial"),
+                "data_final": request.args.get("data_final"),
+                "hora_inicio": request.args.get("hora_inicio"),
+                "hora_fim": request.args.get("hora_fim"),
+            })
 
-            # if not args["ips"] or len(args["ips"]) == 0:
-            #     return {"message": "Informe ao menos um IP."}, 400
-
-            # filtro_dto = FiltroMensagemDTO(
-            #     numero=args["numero"],
-            #     ips=args["ips"],  
-            #     grupo=args.get("grupo"),
-            #     tipo=args.get("tipo"),
-            #     data_inicial=args.get("dataInicial"),
-            #     data_final=args.get("dataFinal"),
-            #     hora_inicial=args.get("horaInicial"),
-            #     hora_final=args.get("horaFinal"),
-            #     dias_semana=args.get("diasSemana"),
-            # )
-
-            mensagens_response = self.buscar_mensagem_usecase.execute(mensagem_por_ip_dto)
+            mensagens_response = self.buscar_mensagem_usecase.execute(dto)
             return [m.to_dict() for m in mensagens_response], 200
 
         except Exception as e:
