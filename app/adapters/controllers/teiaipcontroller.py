@@ -21,7 +21,6 @@ class TeiaIPController(Resource):
             name: ids
             required: true
             type: string
-            description: Lista de IDs de IP separados por vírgula (ex: 1,2,3)
         responses:
           200:
             description: Grafo gerado com sucesso
