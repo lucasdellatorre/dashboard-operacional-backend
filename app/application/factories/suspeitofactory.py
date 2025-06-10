@@ -1,4 +1,5 @@
-from app.application.usecases.suspeitousecase import SuspeitoUseCase
+from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
+from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
 from app.domain.services.suspeitoservice import SuspeitoService
 from app.adapters.repositories.suspeitorepository import SuspeitoRepository
 from app.adapters.repositories.numerorepository import NumeroRepository
@@ -7,6 +8,7 @@ from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase 
+from app.application.usecases.updateemailusecase import UpdateEmailUseCase
 
 class SuspeitoFactory:
     @staticmethod
@@ -38,4 +40,12 @@ class SuspeitoFactory:
     
     @staticmethod
     def atualizar_suspeito():
-        return SuspeitoUseCase(SuspeitoFactory.build_service())
+        return AtualizarSuspeitoUseCase(SuspeitoFactory.build_service())
+    
+    @staticmethod
+    def delete_suspeito():
+        return DeletarSuspeitoUseCase(SuspeitoFactory.build_service())
+    
+    @staticmethod
+    def update_email():
+        return UpdateEmailUseCase(SuspeitoFactory.build_service())
