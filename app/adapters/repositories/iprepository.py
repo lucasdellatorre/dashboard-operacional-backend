@@ -9,3 +9,6 @@ class IPRepository(IIPRepository):
         
     def get_all_ordered_by_last_access(self):
         return self.session.query(ORMIP).order_by(ORMIP.timestamp.asc()).all()
+
+    def find(self, ids: list):
+        return self.session.query(ORMIP).filter(ORMIP.id.in_(ids)).all()

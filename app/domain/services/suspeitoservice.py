@@ -17,7 +17,11 @@ class SuspeitoService:
 
     def get_by_id(self, id: int) -> SuspeitoEntity | None:
         return self.suspeito_repository.get_by_id_with_relations(id)
-
+    
+    def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[dict]:
+        numeros = self.suspeito_repository.get_numeros_by_suspeito_ids(suspeito_ids)
+        return [{"numero": numero} for numero in numeros]
+            
     def get_suspeito_by_numero_id(self, numero_id: int) -> dict | None:
         suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)
         if not suspeito:
@@ -70,12 +74,30 @@ class SuspeitoService:
     def get_all_email(self, suspeito_id):
         return self.suspeito_repository.get_all_email(suspeito_id)
             
-    def atualizar_suspeito(self, id, dados):
-        cpf = dados.get("cpf")
-        if cpf is not None and (not cpf.isdigit() or len(cpf) != 11):
-            raise ValueError("CPF inválido. Deve conter exatamente 11 dígitos numéricos.")
-        
-        return self.suspeito_repository.atualizar(id, dados)
+    def atualizar_suspeito(self, id, dados: dict):
+        suspeito = self.suspeito_repository.get_by_id(id)
+        if not suspeito:
+            raise LookupError(f"Suspeito com ID {id} não encontrado.")
+
+        # Validação do CPF se fornecido
+        if "cpf" in dados:
+            cpf = dados["cpf"]
+            if cpf is not None:
+                if not isinstance(cpf, str) or not cpf.isdigit() or len(cpf) != 11:
+                    raise ValueError("CPF inválido. Deve conter exatamente 11 dígitos numéricos.")
+                suspeito.cpf = cpf
+
+        # Atualiza campos simples se presentes
+        for campo in ["nome", "apelido", "anotacoes", "relevante"]:
+            if campo in dados:
+                setattr(suspeito, campo, dados[campo])
+
+        # Campos de auditoria
+        suspeito.lastUpdateDate = datetime.utcnow()
+        suspeito.lastUpdateCpf = dados.get("lastUpdateCpf")
+
+        # Salva no repositório
+        return self.suspeito_repository.atualizar(suspeito)
     
     def _check_numeros_em_uso(self, numero_ids: list[int]):
         for numero_id in numero_ids:
@@ -85,3 +107,21 @@ class SuspeitoService:
 
     def is_suspeito(self, suspeito_id):
         return self.suspeito_repository.is_suspeito(suspeito_id)
+            
+    def deletar(self, id: int):
+        suspeito = self.suspeito_repository.get_by_id(id)
+        if not suspeito:
+            raise LookupError(f"Suspeito com ID {id} não encontrado.")
+
+        self.suspeito_repository.deletar(id)
+
+    def update_email(self, dto):
+        email = self.suspeito_repository.get_email_by_id(dto.email_id)
+        if not email:
+            raise LookupError(f"E-mail com ID {dto.email_id} não encontrado.")
+
+        email.email = dto.email
+        email.lastUpdateCpf = dto.last_update_cpf
+        email.lastUpdateDate = datetime.utcnow()
+
+        return self.suspeito_repository.update_email(email)

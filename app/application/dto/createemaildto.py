@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 @dataclass
 class CreateEmailDTO:
-    cpf: list[int]
-    email: list[int]
+    cpf: str
+    email: str
     suspeitoId: int
 
     @staticmethod

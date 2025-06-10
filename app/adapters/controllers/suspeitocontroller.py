@@ -10,31 +10,79 @@ from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase
 from app.application.usecases.suspeitousecase import SuspeitoUseCase
+from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
+from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
 from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
+from app.application.dto.suspeitoupdatedto import SuspeitoUpdateDTO
 
 class SuspeitoController(Resource):
     def __init__(self, **kwargs):
-        self.atualizar_suspeito: SuspeitoUseCase = kwargs["atualizar_suspeito"]
+      self.atualizar_suspeito: AtualizarSuspeitoUseCase = kwargs["atualizar_suspeito"]
+      self.deletar_suspeito: DeletarSuspeitoUseCase = kwargs["deletar_suspeito"]
+      self.get_suspeito_by_id_use_case = kwargs["get_suspeito_by_id_use_case"]
         
     def put(self, id):
         """
         Atualiza os dados de um suspeito.
         ---
-        Parâmetros:
-          - id (path): ID do suspeito
-          - JSON no corpo: Campos que podem ser atualizados (nome, cpf, apelido, anotacoes, relevante)
-
-        Respostas:
-          - 200: Suspeito atualizado com sucesso
-          - 400: Dados inválidos
-          - 404: Suspeito não encontrado
-          - 500: Erro interno
+        tags:
+          - Suspeito
+        consumes:
+          - application/json
+        parameters:
+          - in: path
+            name: id
+            required: true
+            description: ID do suspeito
+            schema:
+              type: integer
+          - in: header
+            name: cpfUsuario
+            required: true
+            description: CPF do usuário que está realizando a atualização
+            schema:
+              type: string
+              example: "12345678900"
+          - in: body
+            name: body
+            required: true
+            description: Campos que podem ser atualizados
+            schema:
+              type: object
+              properties:
+                nome:
+                  type: string
+                cpf:
+                  type: string
+                apelido:
+                  type: string
+                anotacoes:
+                  type: string
+                relevante:
+                  type: boolean
+        responses:
+          200:
+            description: Suspeito atualizado com sucesso
+          400:
+            description: Dados inválidos
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
         """
         data = request.get_json(force=True)
         cpf_usuario = request.headers.get("cpfUsuario")
         try:
-            suspeito_atualizado = self.atualizar_suspeito.atualizar_suspeito(id, data, cpf_usuario)
-            return suspeito_atualizado, 200
+            dto = SuspeitoUpdateDTO(
+              nome=data.get("nome"),
+              cpf=data.get("cpf"),
+              apelido=data.get("apelido"),
+              anotacoes=data.get("anotacoes"),
+              relevante=data.get("relevante"),
+              lastUpdateCpf=cpf_usuario
+          )
+            entidade = self.atualizar_suspeito.execute(id, dto)
+            return entidade.to_dict(), 200
         except ValueError as ve:
             return {"error": str(ve)}, 400
         except LookupError as le:
@@ -44,7 +92,66 @@ class SuspeitoController(Resource):
             print(e)
             return {"error": "Erro interno."}, 500
 
-
+    def delete(self, id):
+        """
+        Deleta um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito deletado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        try:
+            self.deletar_suspeito.execute(id)
+            return { "message": "Suspeito deletado com sucesso!" }, 200
+        except LookupError:
+            return { "message": "Suspeito não encontrado." }, 404
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return { "message": "Erro interno no servidor." }, 500            
+        
+    def get(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        try:
+            suspeito = self.get_suspeito_by_id_use_case.execute(id)
+            if not suspeito:
+                return {"message": "Suspeito não encontrado"}, 404
+            return suspeito.to_dict(), 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+                
 class SuspeitoCreateController(Resource):
     def __init__(self, **kwargs):
         self.create_suspeito_use_case = kwargs['create_suspeito_use_case']
@@ -371,8 +478,7 @@ class ManageNumeroController(Resource):
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
 
-
-# # Blueprint e API registration
+# Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
 api = Api(blueprint_suspeito)
 
@@ -380,7 +486,9 @@ api.add_resource(
     SuspeitoController,
     "/suspeito/<int:id>",
     resource_class_kwargs={
-        "atualizar_suspeito": SuspeitoFactory.atualizar_suspeito()
+        "atualizar_suspeito": SuspeitoFactory.atualizar_suspeito(),
+        "deletar_suspeito": SuspeitoFactory.delete_suspeito(),
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
     }
 )
 
