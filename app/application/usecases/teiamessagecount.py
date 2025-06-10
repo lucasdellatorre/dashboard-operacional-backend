@@ -22,8 +22,7 @@ class TeiaMessageCountUseCase:
             
             is_alvo = self.numero_service.isAlvo(id)
             
-            node = { "id": numero_telefone, "group": RED if is_alvo else GRAY }
-            nodes.append(node)            
+            nodes.append(node)
             
             if not is_alvo: continue
             
