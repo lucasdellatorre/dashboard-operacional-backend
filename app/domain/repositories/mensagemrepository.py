@@ -1,12 +1,17 @@
 from abc import ABC, abstractmethod
 from typing import List
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
+from typing import List, Dict
 
 class IMensagemRepository(ABC):
     @abstractmethod
     def get_mensagens_from_numero_id(self, numero_id) -> list[DomainMensagem]:
         raise (NotImplementedError)
-    
+
+    @abstractmethod
+    def get_mensagens_by_ip(self, ip_id: int) -> List[DomainMensagem]:
+        raise (NotImplementedError)
+
     @abstractmethod
     def contar_mensagens_por_contato(
         self,
@@ -28,7 +33,7 @@ class IMensagemRepository(ABC):
         }
         """
         raise NotImplementedError
-    
+
     @abstractmethod
     def contar_mensagens_por_horario(
         self,
