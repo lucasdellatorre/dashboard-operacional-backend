@@ -31,7 +31,7 @@ class MensagemDiaController(Resource):
                 type: string
           - name: operacoes
             in: query
-            required: true
+            required: false
             schema:
               type: array
               items:

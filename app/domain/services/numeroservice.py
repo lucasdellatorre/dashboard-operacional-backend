@@ -21,3 +21,5 @@ class NumeroService():
     def listar_numeros(self) -> list[Numero]:
         return self.repository.listar_todos()
     
+    def find_all_by_ids(self, ids: list[int]) -> list[Numero]:
+     return self.repository.get_all_by_ids(ids)

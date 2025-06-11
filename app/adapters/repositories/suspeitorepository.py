@@ -15,6 +15,7 @@ from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as OR
 from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.infraestructure.database.db import db
 from app.infraestructure.utils.logger import logger
+from sqlalchemy.orm import lazyload
 
 class SuspeitoRepository(ISuspeitoRepository):
     def __init__(self, session: Session = db.session):
@@ -49,24 +50,20 @@ class SuspeitoRepository(ISuspeitoRepository):
         return ORMSuspeito.toEntity(orm_obj)
     
     def get_by_id(self, id: int) -> SuspeitoEntity | None:
-        orm_obj = db.session.query(ORMSuspeito).filter_by(id=id).first()
+        orm_obj = (
+            db.session.query(ORMSuspeito)
+            .options(
+                lazyload(ORMSuspeito.emails),
+                lazyload(ORMSuspeito.numero_suspeitos)
+            )
+            .filter_by(id=id)
+            .first()
+        )
 
         if not orm_obj:
             return None
 
-        return SuspeitoEntity(
-            id=orm_obj.id,
-            nome=orm_obj.nome,
-            apelido=orm_obj.apelido,
-            cpf=orm_obj.cpf,
-            relevante=orm_obj.relevante,
-            anotacoes=orm_obj.anotacoes,
-            lastUpdateDate=orm_obj.lastUpdateDate,
-            lastUpdateCpf=orm_obj.lastUpdateCpf,
-            emails=[],  # omitido propositalmente
-            numerosuspeito=[]  # omitido propositalmente
-        )
-            
+        return ORMSuspeito.toEntity(orm_obj)
 
     def get_by_id_with_relations(self, id: int) -> SuspeitoEntity | None:
         orm_obj = (
@@ -145,7 +142,7 @@ class SuspeitoRepository(ISuspeitoRepository):
             .all()
         )
 
-        return [r[0] for r in results]  # extrai os valores do resultado do SQLAlchemy
+        return [r[0] for r in results] 
     
     def get_by_numero_id_with_relations(self, numero_id: int) -> SuspeitoEntity | None:
         numero_suspeito = (

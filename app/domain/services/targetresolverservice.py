@@ -1,12 +1,14 @@
 from typing import Tuple, List
 from app.application.dto.mensagensrequestdto import MensagensRequestDTO
-
+from app.domain.services.suspeitoservice import SuspeitoService
+from app.domain.services.interceptacaoservice import InterceptacaoService
+from app.domain.services.interceptacaonumeroservice import InterceptacaoNumeroService
 
 class TargetResolverService:
     def __init__(self, suspeito_service, interceptacao_service, interceptacao_numero_service):
-        self.suspeito_service = suspeito_service
-        self.interceptacao_service = interceptacao_service
-        self.interceptacao_numero_service = interceptacao_numero_service
+        self.suspeito_service: SuspeitoService = suspeito_service
+        self.interceptacao_service: InterceptacaoService = interceptacao_service
+        self.interceptacao_numero_service: InterceptacaoNumeroService = interceptacao_numero_service
 
     def resolver_alvos(self, filtros: MensagensRequestDTO) -> Tuple[List[str], List[str]]:
         if not (filtros.suspeitos or filtros.numeros or filtros.operacoes):
