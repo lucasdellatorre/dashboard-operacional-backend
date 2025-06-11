@@ -12,6 +12,7 @@ from app.adapters.repositories.entities.suspeito import Suspeito as ORMSuspeito
 from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.adapters.repositories.entities.numerosuspeito import NumeroSuspeito as ORMNumeroSuspeito
 from app.adapters.repositories.entities.suspeitoemail import SuspeitoEmail as ORMSuspeitoEmail
+from app.adapters.repositories.entities.numero import Numero as ORMNumero
 from app.infraestructure.database.db import db
 from app.infraestructure.utils.logger import logger
 
@@ -297,6 +298,43 @@ class SuspeitoRepository(ISuspeitoRepository):
     def get_all_email(self, suspeito_id):
         results = db.session.query(ORMSuspeitoEmail).filter(ORMSuspeitoEmail.suspeitoId == suspeito_id).all()
         return [ORMSuspeitoEmail.toSuspeitoEmailEntidade(result) for result in results]
+    
+    def is_suspeito(self, suspeito_id):
+        result = db.session.query(ORMSuspeito).filter(ORMSuspeito.id == suspeito_id)
+        if result: 
+            return True
+        else:
+            return False
+        
+    def add_telefone(self, suspeito_id, telefoneId, cpf) -> bool:
+        suspeito: ORMSuspeito = self.session.query(ORMSuspeito).get(suspeito_id)
+        if not suspeito:
+            return False                   
+
+        numero_orm: ORMNumero = self.session.query(ORMNumero).get(telefoneId)
+        
+        if not numero_orm:
+            return False
+
+        exists = self.session.query(ORMNumeroSuspeito).filter_by(
+            suspeitoId=suspeito.id,
+            numeroId=numero_orm.id
+        ).first()
+        if exists:
+            return True 
+
+        self.session.add(
+            ORMNumeroSuspeito(
+                suspeitoId=suspeito.id,
+                numeroId=numero_orm.id,
+                lastUpdateDate=datetime.now(),
+                lastUpdateCpf=cpf
+            )
+        )
+        
+        self.session.commit()
+
+        return True
     
     def get_email_by_id(self, email_id: int) -> SuspeitoEmailEntity | None:
         orm_email = db.session.query(ORMSuspeitoEmail).filter_by(id=email_id).first()

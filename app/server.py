@@ -12,6 +12,7 @@ from app.adapters.controllers.uploadcontroller import blueprint_upload
 from app.adapters.controllers.teiacontroller import blueprint_teia
 from app.adapters.controllers.planilhacontroller import blueprint_planilha
 from app.adapters.controllers.numerocontroller import blueprint_numero
+from app.adapters.controllers.mensagemipcontroller import blueprint_mensagem_ip
 from app.adapters.controllers.ipcontroller import blueprint_ip
 from app.adapters.controllers.suspeitocontroller import blueprint_suspeito
 from app.adapters.controllers.suspeitoemailcontroller import blueprint_suspeito_email
@@ -75,7 +76,7 @@ def create_app(config_class=None):
     # ============================================
 
     blueprint_list = [
-        blueprint_test,
+blueprint_test,
         blueprint_usuario,
         blueprint_operacao,
         blueprint_upload,
@@ -83,6 +84,7 @@ def create_app(config_class=None):
         blueprint_teia_ip,
         blueprint_planilha,
         blueprint_numero,
+        blueprint_mensagem_ip,
         blueprint_ip,
         blueprint_numeros_operacao, 
         blueprint_suspeito,

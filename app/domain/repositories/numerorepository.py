@@ -9,6 +9,10 @@ class INumeroRepository(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def isNumero(self, numero_id) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
     def isAlvo(self, numero_id) -> bool:
         raise NotImplementedError()
 

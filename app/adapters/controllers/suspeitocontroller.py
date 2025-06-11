@@ -1,16 +1,23 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
+from app.application.dto.patchnumerosuspeitodto import PatchNumeroSuspeitoDTO
 from app.application.factories.suspeitofactory import SuspeitoFactory
 from app.application.factories.numerosuspeitofactory import NumeroSuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
+from app.application.dto.createemaildto import CreateEmailDTO
+from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
+from app.application.usecases.createemailusecase import CreateEmailUseCase
+from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
+from app.application.usecases.getallemailusecase import GetAllEmailUseCase
 from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
+from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
 from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
 from app.application.dto.suspeitoupdatedto import SuspeitoUpdateDTO
 
 class SuspeitoController(Resource):
     def __init__(self, **kwargs):
       self.atualizar_suspeito: AtualizarSuspeitoUseCase = kwargs["atualizar_suspeito"]
-      self.deletar_suspeito: AtualizarSuspeitoUseCase = kwargs["deletar_suspeito"]
+      self.deletar_suspeito: DeletarSuspeitoUseCase = kwargs["deletar_suspeito"]
       self.get_suspeito_by_id_use_case = kwargs["get_suspeito_by_id_use_case"]
         
     def put(self, id):
@@ -73,7 +80,7 @@ class SuspeitoController(Resource):
               relevante=data.get("relevante"),
               lastUpdateCpf=cpf_usuario
           )
-            entidade = self.atualizar_suspeito.atualizar_suspeito(id, dto)
+            entidade = self.atualizar_suspeito.execute(id, dto)
             return entidade.to_dict(), 200
         except ValueError as ve:
             return {"error": str(ve)}, 400
@@ -203,8 +210,178 @@ class SuspeitoCreateController(Resource):
             return {"message": str(e)}, 400
         except Exception as e:
             print(f"[ERROR] {e}")
-            return {"message": "Erro interno no servidor"}, 500       
+            return {"message": "Erro interno no servidor"}, 500
+
+
+class SuspeitoDetailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_suspeito_by_id_use_case = kwargs['get_suspeito_by_id_use_case']
+
+    def get(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        try:
+            suspeito = self.get_suspeito_by_id_use_case.execute(id)
+            if not suspeito:
+                return {"message": "Suspeito não encontrado"}, 404
+            return suspeito.to_dict(), 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
         
+class GetEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_all_email_use_case: GetAllEmailUseCase = kwargs['get_all_email_use_case']
+    
+    def get(self, id):
+        """
+        Retorna os emails de um suspeito.
+        ---
+        tags:
+          - Planilha
+        responses:
+          200:
+            description: Lista de emails
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: ID do email
+                      suspeitoId:
+                        type: integer
+                        description: ID do suspeito
+                      email:
+                        type: string
+                        description: Email do suspeito
+                      lastUpdateCpf:
+                        type: string
+                        description: Último cpf que editou o email
+                      lastUpdateDate:
+                        type: date
+                        description: Última data de atualização
+          500:
+            description: Erro interno do servidor
+        """
+        try:
+            results = self.get_all_email_use_case.execute(id)
+            return { "emails": [ result.to_dict() for result in results] }, 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+          
+class ManageEmailController(Resource):
+    def __init__(self, **kwargs):
+        self.delete_email_use_case: DeleteEmailUseCase = kwargs['delete_email_use_case']
+        self.create_email_use_case: CreateEmailUseCase = kwargs['create_email_use_case']
+
+    def delete(self, id: int, emailId: int):
+        """
+        Deleta um email pelo ID do suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          201:
+            description: Email deletado com sucesso
+          400:
+            description: Falha ao deletar email
+          500:
+            description: Erro interno
+        """    
+        try:
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            is_successful = self.delete_email_use_case.execute(id, emailId)
+            
+            if is_successful:
+                return { "message": "Email deletado com sucesso!" }, 201
+            return { "message": "Falha ao deletar email!" }, 400
+            
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+        
+    def post(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          201:
+            description: Email criado com sucesso
+          400:
+            description: Falha ao criar email
+          500:
+            description: Erro interno
+        """
+        try:
+            data = request.get_json()
+            cpf_usuario = request.headers.get("cpfUsuario")
+            
+            dto = CreateEmailDTO.from_dict(data, id, cpf_usuario)
+            is_successful = self.create_email_use_case.execute(dto)
+            
+            if is_successful:
+                return { "message": "Email criado com sucesso!" }, 201
+            return { "message": "Falha ao criar email!" }, 400
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
+          
 class ManageNumeroController(Resource):
     def __init__(self, **kwargs):
         self.delete_numero_use_case:DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
@@ -245,6 +422,63 @@ class ManageNumeroController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+class AtualizaNumeroController(Resource):
+    def __init__(self, **kwargs):
+        self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
+              
+    def patch(self, id: int):
+        """
+        Adiciona uma lista de telefones para um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - numerosIds
+              properties:
+                numerosIds:
+                  type: array
+                  items:
+                    type: integer
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        
+        data = request.get_json()
+        cpfUsuario = request.headers.get("cpfUsuario")
+        try:
+            numero_suspeito_dto = PatchNumeroSuspeitoDTO(**data | { 'cpf': cpfUsuario, 'suspeitoId': id })
+            result = self.adicionar_numero_suspeito_use_case.execute(numero_suspeito_dto)
+            if result:
+              return { 'Message:': 'números adicionados com sucesso!' }, 200
+            return { 'Message:': 'erro ao adicionar números' }, 400
+        except ValueError as ve:
+            return {'message': str(ve)}, 404
+        except Exception as e:
+            print(f'[ERRO PATCH /numeros]: {e}')
+            return {'message': 'Erro interno no servidor.'}, 500
 
 # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
@@ -269,9 +503,43 @@ api.add_resource(
 )
 
 api.add_resource(
+    SuspeitoDetailController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+    }
+)
+
+api.add_resource(
+    GetEmailController,
+    "/suspeito/<int:id>/email",
+    resource_class_kwargs={
+        "get_all_email_use_case": SuspeitoFactory.get_all_email()
+    }
+)
+
+api.add_resource(
+    ManageEmailController,
+    "/suspeito/<int:id>/email/<int:emailId>",
+    resource_class_kwargs={
+        "create_email_use_case": SuspeitoFactory.create_email(),
+        "delete_email_use_case": SuspeitoFactory.delete_email(),
+    }
+)
+
+api.add_resource(
+    AtualizaNumeroController,
+    "/suspeito/<int:id>/numero",
+    resource_class_kwargs={
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
+    }
+)
+
+api.add_resource(
     ManageNumeroController,
     "/suspeito/<int:id>/numero/<int:numeroId>",
     resource_class_kwargs={
-        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number()
+        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number(),
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
     }
 )
