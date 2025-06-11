@@ -71,6 +71,17 @@ class ISuspeitoRepository(ABC):
         pass
 
     @abstractmethod
+    def is_suspeito(self) -> bool:
+        raise(NotImplementedError)
+    
+    @abstractmethod
+    def add_telefone(self, suspeito_id, telefones, cpf) -> bool:
+        """
+        Adiciona telefones novos para um suspeito
+        """
+        pass
+    
+    @abstractmethod
     def get_email_by_id(self, email_id: int) -> SuspeitoEmail | None:
         """
         Busca um objeto SuspeitoEmail pelo ID.

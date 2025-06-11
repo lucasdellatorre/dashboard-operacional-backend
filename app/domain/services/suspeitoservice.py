@@ -68,6 +68,9 @@ class SuspeitoService:
     def delete_email(self, suspeito_id, email_id):
         return self.suspeito_repository.delete_email(suspeito_id, email_id)
     
+    def add_telefone(self, suspeito_id, numeros, cpf):
+        return self.suspeito_repository.add_telefone(suspeito_id, numeros, cpf)
+    
     def get_all_email(self, suspeito_id):
         return self.suspeito_repository.get_all_email(suspeito_id)
             
@@ -101,6 +104,9 @@ class SuspeitoService:
             suspeito = self.suspeito_repository.get_by_numero_id_with_relations(numero_id)
             if suspeito:
                 raise ValueError(f"O número {numero_id} já está vinculado ao suspeito '{suspeito.apelido}'.")
+
+    def is_suspeito(self, suspeito_id):
+        return self.suspeito_repository.is_suspeito(suspeito_id)
             
     def deletar(self, id: int):
         suspeito = self.suspeito_repository.get_by_id(id)
