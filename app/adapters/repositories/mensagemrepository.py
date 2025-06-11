@@ -5,7 +5,6 @@ from app.infraestructure.database.db import db
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
 from app.adapters.repositories.entities.mensagens import Mensagem as ORMMensagem
 from app.infraestructure.utils.logger import logger
-from datetime import date, time
 
 class MensagemRepository(IMensagemRepository):
     def __init__(self, session: Session = db.session):
@@ -201,8 +200,7 @@ class MensagemRepository(IMensagemRepository):
         resultados = query.all()
 
         return [{"periodo": r.periodo, "qtdMensagens": r.qtdMensagens} for r in resultados]
-   
-        
+          
     def contar_mensagens_por_dia(
         self,
         numeros: list[str],
@@ -216,15 +214,6 @@ class MensagemRepository(IMensagemRepository):
     ) -> list[dict]:
         if not numeros:
             return []
-
-        if data_inicial:
-            data_inicial = date.fromisoformat(data_inicial)
-        if data_final:
-            data_final = date.fromisoformat(data_final)
-        if hora_inicio:
-            hora_inicio = time.fromisoformat(hora_inicio)
-        if hora_fim:
-            hora_fim = time.fromisoformat(hora_fim)
 
         query = (
             self.session.query(
@@ -265,9 +254,64 @@ class MensagemRepository(IMensagemRepository):
 
         if hora_fim:
             query = query.filter(ORMMensagem.hora <= hora_fim)
-
+            
         query = query.group_by(func.date(ORMMensagem.data)).order_by(func.date(ORMMensagem.data))
 
         resultados = query.all()
 
         return [{"data": r.data.strftime("%Y-%m-%d"), "qtdMensagens": r.qtdMensagens} for r in resultados]
+
+    def contar_mensagens_por_ip(
+        self,
+        numeros: list[str],
+        tickets: list[str],
+        tipo: str,
+        grupo: str,
+        data_inicial: str,
+        data_final: str,
+        hora_inicio: str,
+        hora_fim: str
+    ) -> list[dict]:
+        if not numeros:
+            return []
+        
+        query = (
+            self.session.query(
+                ORMMensagem.remetenteIp.label("ip"),
+                func.count(ORMMensagem.id).label("qtdMensagens")
+            )
+            .filter(ORMMensagem.remetente.in_(numeros))
+        )
+
+        if tickets:
+            query = query.filter(ORMMensagem.internalTicketNumber.in_(tickets))
+
+        if grupo and grupo.lower() != "all":
+            grupo_lower = grupo.lower()
+            if grupo_lower == "group":
+                query = query.filter(ORMMensagem.grupoId.isnot(None))
+            elif grupo_lower == "number":
+                query = query.filter(ORMMensagem.grupoId.is_(None))
+            else:
+                logger.warning(f"Grupo '{grupo}' não reconhecido. Nenhum filtro aplicado.")
+
+        if tipo and tipo.lower() != "all":
+            query = query.filter(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
+
+        if data_inicial:
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
+
+        if data_final:
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) <= data_final)
+
+        if hora_inicio:
+            query = query.filter(ORMMensagem.hora >= hora_inicio)
+
+        if hora_fim:
+            query = query.filter(ORMMensagem.hora <= hora_fim)
+
+        query = query.group_by(ORMMensagem.remetenteIp).order_by(func.count(ORMMensagem.id).desc())
+
+        resultados = query.all()
+
+        return [{"ip": r.ip, "qtdMensagens": r.qtdMensagens} for r in resultados]
