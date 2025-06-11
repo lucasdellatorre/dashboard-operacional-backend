@@ -9,7 +9,6 @@ from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumer
 from app.application.usecases.createemailusecase import CreateEmailUseCase
 from app.application.usecases.deleteemailusecase import DeleteEmailUseCase
 from app.application.usecases.getallemailusecase import GetAllEmailUseCase
-from app.application.usecases.suspeitousecase import SuspeitoUseCase
 from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
 from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
 from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
@@ -217,7 +216,6 @@ class SuspeitoCreateController(Resource):
 class SuspeitoDetailController(Resource):
     def __init__(self, **kwargs):
         self.get_suspeito_by_id_use_case = kwargs['get_suspeito_by_id_use_case']
-        self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
 
     def get(self, id: int):
         """
@@ -248,59 +246,6 @@ class SuspeitoDetailController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
-          
-    def patch(self, id: int):
-        """
-        Adiciona uma lista de telefones para um suspeito.
-        ---
-        tags:
-          - Suspeito
-        parameters:
-          - in: path
-            name: id
-            required: true
-            schema:
-              type: integer
-            description: ID do suspeito
-          - in: body
-            required: true
-            schema:
-              type: object
-              required:
-                - numerosIds
-              properties:
-                numerosIds:
-                  type: array
-                  items:
-                    type: integer
-          - in: header
-            name: cpfUsuario
-            required: true
-            schema:
-              type: string
-              example: "12345678900"
-        responses:
-          200:
-            description: Suspeito encontrado com sucesso
-          404:
-            description: Suspeito não encontrado
-          500:
-            description: Erro interno
-        """
-        
-        data = request.get_json()
-        cpfUsuario = request.headers.get("cpfUsuario")
-        try:
-            numero_suspeito_dto = PatchNumeroSuspeitoDTO(**data | { 'cpf': cpfUsuario, 'suspeitoId': id })
-            result = self.adicionar_numero_suspeito_use_case.execute(numero_suspeito_dto)
-            if result:
-              return { 'Message:': 'números adicionados com sucesso!' }, 200
-            return { 'Message:': 'erro ao adicionar números' }, 400
-        except ValueError as ve:
-            return {'message': str(ve)}, 404
-        except Exception as e:
-            print(f'[ERRO PATCH /numeros]: {e}')
-            return {'message': 'Erro interno no servidor.'}, 500
         
 class GetEmailController(Resource):
     def __init__(self, **kwargs):
@@ -477,6 +422,63 @@ class ManageNumeroController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+class AtualizaNumeroController(Resource):
+    def __init__(self, **kwargs):
+        self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
+              
+    def patch(self, id: int):
+        """
+        Adiciona uma lista de telefones para um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+          - in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - numerosIds
+              properties:
+                numerosIds:
+                  type: array
+                  items:
+                    type: integer
+          - in: header
+            name: cpfUsuario
+            required: true
+            schema:
+              type: string
+              example: "12345678900"
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        
+        data = request.get_json()
+        cpfUsuario = request.headers.get("cpfUsuario")
+        try:
+            numero_suspeito_dto = PatchNumeroSuspeitoDTO(**data | { 'cpf': cpfUsuario, 'suspeitoId': id })
+            result = self.adicionar_numero_suspeito_use_case.execute(numero_suspeito_dto)
+            if result:
+              return { 'Message:': 'números adicionados com sucesso!' }, 200
+            return { 'Message:': 'erro ao adicionar números' }, 400
+        except ValueError as ve:
+            return {'message': str(ve)}, 404
+        except Exception as e:
+            print(f'[ERRO PATCH /numeros]: {e}')
+            return {'message': 'Erro interno no servidor.'}, 500
 
 # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
@@ -504,8 +506,7 @@ api.add_resource(
     SuspeitoDetailController,
     "/suspeito/<int:id>",
     resource_class_kwargs={
-        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id(),
-        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
     }
 )
 
@@ -527,9 +528,18 @@ api.add_resource(
 )
 
 api.add_resource(
+    AtualizaNumeroController,
+    "/suspeito/<int:id>/numero",
+    resource_class_kwargs={
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
+    }
+)
+
+api.add_resource(
     ManageNumeroController,
     "/suspeito/<int:id>/numero/<int:numeroId>",
     resource_class_kwargs={
-        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number()
+        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number(),
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
     }
 )

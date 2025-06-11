@@ -1,5 +1,4 @@
 from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
-from app.application.usecases.suspeitousecase import SuspeitoUseCase
 from app.domain.services.numeroservice import NumeroService
 from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
 from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
