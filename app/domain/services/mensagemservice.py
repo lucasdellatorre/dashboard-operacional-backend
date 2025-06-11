@@ -129,3 +129,28 @@ class MensagemService():
             {"dia": DIAS_SEMANA[i], "qtdMensagens": agrupado.get(DIAS_SEMANA[i], 0)}
             for i in range(7)
         ]
+    
+    def obter_quantidade_mensagens_por_ip(
+        self,
+        numeros: list[str],
+        tickets: list[str],
+        tipo: str,
+        grupo: str,
+        data_inicial: str,
+        data_final: str,
+        hora_inicio: str,
+        hora_fim: str
+    ) -> list[dict]:
+        """
+        Retorna contagem de mensagens por IP, aplicando todos os filtros.
+        """
+        return self.repository.contar_mensagens_por_ip(
+            numeros=numeros,
+            tickets=tickets,
+            tipo=tipo,
+            grupo=grupo,
+            data_inicial=data_inicial,
+            data_final=data_final,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim
+        )

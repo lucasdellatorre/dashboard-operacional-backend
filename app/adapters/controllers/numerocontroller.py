@@ -1,15 +1,12 @@
 import time
-from flask import Blueprint, request
+from flask import Blueprint
 from flask_restful import Api, Resource
-from app.application.dto.patchnumerosuspeitodto import PatchNumeroSuspeitoDTO
-from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
 from app.application.usecases.getallnumbersusecase import GetAllNumbersUseCase
 from app.application.factories.listanumerofactory import ListaNumerosFactory
 
 class NumeroController(Resource):
     def __init__(self, **kwargs):
         self.get_all_numeros: GetAllNumbersUseCase = kwargs['get_all_numeros']
-        self.adicionar_numeros_suspeito: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numeros_suspeito']
 
     def get(self):
         """
