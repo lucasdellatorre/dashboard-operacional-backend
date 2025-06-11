@@ -21,6 +21,7 @@ from app.adapters.controllers.uploadtrackercontroller import blueprint_progress
 from app.adapters.controllers.mensagemdashboardcontroller import blueprint_mensagens
 from app.adapters.controllers.mensagenshorariocontroller import blueprint_mensagens_horario
 from app.adapters.controllers.teiaipcontroller import blueprint_teia_ip
+from app.adapters.controllers.mensagemdiacontroller import blueprint_mensagem_dia
 
 def create_app(config_class=None):
     # ============================================
@@ -89,7 +90,8 @@ def create_app(config_class=None):
         blueprint_progress,
         blueprint_suspeito_email,
         blueprint_mensagens,
-        blueprint_mensagens_horario
+        blueprint_mensagens_horario,
+        blueprint_mensagem_dia
     ]
 
     for blueprint in blueprint_list:
