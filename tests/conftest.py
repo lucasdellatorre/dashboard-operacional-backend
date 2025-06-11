@@ -1,16 +1,13 @@
 from pytest import fixture
 from flask.testing import FlaskClient, FlaskCliRunner
+from app.infraestructure.database.config import TestingConfig
 from app.server import create_app
 
 @fixture(scope='module')
 def app():
-    app = create_app()
-    app.config['TESTING'] = True
-    
+    app = create_app(config_class=TestingConfig)
     # other setup can go here
-    
     yield app
-    
     # clean up / reset resources here
     
 @fixture()

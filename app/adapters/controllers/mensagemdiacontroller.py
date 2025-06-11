@@ -1,17 +1,16 @@
 from flask import Blueprint, request
-from flask_restful import Api, Resource
-from app.application.usecases.getmensagensporcontatousecase import GetMensagensPorContatoUseCase
-from app.application.factories.mensagensdashboardfactory import MensagensDashboardFactory
+from flask_restful import Api, Resource, reqparse
 from app.application.dto.mensagensrequestdto import MensagensRequestDTO
-import time
+from app.application.factories.mensagemdiafactory import MensagemDiaFactory
+from app.application.usecases.buscarmensagempordiausecase import BuscarMensagemPorDiaUseCase
 
-class MensagensDashboardController(Resource):
+class MensagemDiaController(Resource):
     def __init__(self, **kwargs):
-        self.get_mensagens_por_contato: GetMensagensPorContatoUseCase = kwargs['get_mensagens_por_contato']
+        self.buscar_mensagem_usecase: BuscarMensagemPorDiaUseCase = kwargs["buscar_mensagem_usecase"]
 
     def get(self):
         """
-        Retorna a quantidade de mensagens por contato de cada número ou suspeito informado.
+        Retorna a quantidade de mensagens por dia da semana
         ---
         tags:
           - Mensagens
@@ -73,7 +72,7 @@ class MensagensDashboardController(Resource):
               type: string
         responses:
           200:
-            description: Lista de contatos com a quantidade de mensagens.
+            description: Lista de dias com a quantidade de mensagens.
             content:
               application/json:
                 schema:
@@ -90,43 +89,34 @@ class MensagensDashboardController(Resource):
           500:
             description: Erro interno no servidor
         """
-        start_time = time.time()
         try:
             data = request.args.to_dict(flat=False)
-
             dto = MensagensRequestDTO.from_dict({
                 "numeros": data.get("numeros", []) or data.get("numeros[]", []),
                 "suspeitos": data.get("suspeitos", []) or data.get("suspeitos[]", []),
                 "operacoes": data.get("operacoes", []) or data.get("operacoes[]", []),
-                "grupo": request.args.get("grupo", "AMBOS"),
-                "tipo": request.args.get("tipo", "TODOS"),
+                "grupo": request.args.get("grupo"),
+                "tipo": request.args.get("tipo"),
                 "data_inicial": request.args.get("data_inicial"),
                 "data_final": request.args.get("data_final"),
                 "hora_inicio": request.args.get("hora_inicio"),
                 "hora_fim": request.args.get("hora_fim"),
             })
+          
+            result = self.buscar_mensagem_usecase.execute(dto)
+            return result, 200
 
-            resultado = self.get_mensagens_por_contato.execute(dto)
-            return resultado, 200
-
-        except ValueError as ve:
-            return {'message': str(ve)}, 400
         except Exception as e:
-            print(f'[ERRO /mensagens]: {e}')
-            return {'message': 'Erro interno no servidor.'}, 500
-        finally:
-            duration_ms = (time.time() - start_time) * 1000
-            print(f'[INFO /mensagens] Tempo de execução: {duration_ms:.2f} ms')
+            print(f"[Erro] /mensagens/dia: {e}")
+            return {"message": "Erro interno no servidor."}, 500
 
-
-# Blueprint e rota
-blueprint_mensagens = Blueprint('blueprint_mensagens', __name__)
-api = Api(blueprint_mensagens)
+blueprint_mensagem_dia = Blueprint("blueprint_mensagem_dia", __name__)
+api = Api(blueprint_mensagem_dia)
 
 api.add_resource(
-    MensagensDashboardController,
-    '/mensagens/contatos',
+    MensagemDiaController,
+    "/mensagens/dia",
     resource_class_kwargs={
-        'get_mensagens_por_contato': MensagensDashboardFactory.get_mensagens_por_contato()
+        "buscar_mensagem_usecase": MensagemDiaFactory.buscar_mensagens_por_dia()
     }
 )
