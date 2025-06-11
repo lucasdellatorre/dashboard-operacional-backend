@@ -31,60 +31,60 @@ class TeiaMessageCountUseCase:
         if not (request.suspeitos or request.numeros or request.operacoes):
             raise ValueError("É necessário informar ao menos um dos seguintes: suspeitos, números ou operações.")
         
-        # Se tem apenas operações, busca numeros na target resolver
-        if not request.suspeitos and not request.numeros:
-            numero_ids, tickets = self.target_resolver_service.resolver_alvos(request)
-            request.numeros = numero_ids
-            request.operacoes = tickets
-        else:
-            tickets = []
-            if request.operacoes:
-                interceptacoes = self.interceptacao_service.get_interceptacoes_por_operacoes(request.operacoes)
-                tickets = [i.internalTicketNumber for i in interceptacoes]
+        numero_ids, tickets = self.target_resolver_service.resolver_alvos(request)
+        request.numeros = numero_ids
+        request.operacoes = tickets
 
-            for suspeito_id in request.suspeitos:
-                suspeito = self.suspeito_service.get_info_e_numeros_by_id(suspeito_id)
-                if not suspeito:
-                    continue
-                nome = suspeito.get("apelido") or suspeito.get("nome") or "Desconhecido"
-                node_id = nome
+        suspeitos = []
+        # para cada numero_ids, busca o suspeito relacionado
+        for numero_id in request.numeros:
+            suspeito = self.suspeito_service.get_by_numero_id(numero_id)
+            if suspeito:
+                suspeitos.append(suspeito)
 
-                if node_id not in added_nodes:
-                    nodes.append({
-                        "id": node_id,
-                        "label": nome,
-                        "group": RED
+        for suspeito_id in suspeitos:
+            suspeito = self.suspeito_service.get_info_e_numeros_by_id(suspeito_id)
+            if not suspeito:
+                continue
+            nome = suspeito.get("apelido") or suspeito.get("nome") or "Desconhecido"
+            node_id = nome
+
+            if node_id not in added_nodes:
+                nodes.append({
+                    "id": node_id,
+                    "label": nome,
+                    "group": RED
+                })
+                added_nodes.add(node_id)
+
+            numeros_alvo = [
+                n for n in suspeito.get("numeros", [])
+            ]
+
+            if not numeros_alvo:
+                continue
+
+            for numero in numeros_alvo:
+                resultados = self.mensagem_service.obter_quantidade_mensagens_por_contato(
+                    numeros=[numero],
+                    tickets=tickets,
+                    tipo=request.tipo,
+                    grupo=request.grupo,
+                    data_inicial=request.data_inicial,
+                    data_final=request.data_final,
+                    hora_inicio=request.hora_inicio,
+                    hora_fim=request.hora_fim
+                )
+
+                for resultado in resultados:
+                    contato = resultado["contato"]
+                    qtd = resultado["qtdMensagens"]
+
+                    links.append({
+                        "source": node_id,
+                        "target": contato,
+                        "value": qtd
                     })
-                    added_nodes.add(node_id)
-
-                numeros_alvo = [
-                    n for n in suspeito.get("numeros", [])
-                ]
-
-                if not numeros_alvo:
-                    continue
-
-                for numero in numeros_alvo:
-                    resultados = self.mensagem_service.obter_quantidade_mensagens_por_contato(
-                        numeros=[numero],
-                        tickets=tickets,
-                        tipo=request.tipo,
-                        grupo=request.grupo,
-                        data_inicial=request.data_inicial,
-                        data_final=request.data_final,
-                        hora_inicio=request.hora_inicio,
-                        hora_fim=request.hora_fim
-                    )
-
-                    for resultado in resultados:
-                        contato = resultado["contato"]
-                        qtd = resultado["qtdMensagens"]
-
-                        links.append({
-                            "source": node_id,
-                            "target": contato,
-                            "value": qtd
-                        })
 
         for numero in request.numeros:
             if numero not in added_nodes:

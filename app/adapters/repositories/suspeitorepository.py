@@ -143,6 +143,48 @@ class SuspeitoRepository(ISuspeitoRepository):
         )
 
         return [r[0] for r in results] 
+
+    def get_by_numero(self, numero: str) -> SuspeitoEntity | None:
+        # Realiza o JOIN entre NumeroSuspeito e Numero para pegar o campo numero.numero
+        numero_suspeito = (
+            db.session.query(ORMNumeroSuspeito, Numero.numero)  # Inclui Numero.numero no SELECT
+            .join(Numero, Numero.id == ORMNumeroSuspeito.numero_id)  # Faz o JOIN com a tabela Numero
+            .filter(Numero.numero == numero)  # Filtra pelo valor do numero como string
+            .first()
+        )
+        
+        if not numero_suspeito:
+            return None
+
+        # Pega o numero associado ao numero_suspeito
+        numero_valor = numero_suspeito.numero.numero
+
+        # Agora busca o Suspeito com base no suspeito_id
+        suspeito = (
+            db.session.query(ORMSuspeito)
+            .filter(ORMSuspeito.id == numero_suspeito.suspeito_id)
+            .options(
+                lazyload(ORMSuspeito.emails),
+                lazyload(ORMSuspeito.numero_suspeitos)
+            )
+            .first()
+        )
+
+        if not suspeito:
+            return None
+
+        return SuspeitoEntity(
+            id=suspeito.id,
+            nome=None,
+            apelido=suspeito.apelido,
+            cpf=None,
+            relevante=None,
+            anotacoes=None,
+            last_update_date=None,
+            last_update_cpf=None,
+            emails=[],
+            numerosuspeito=[numero_valor]  # Incluindo o numero obtido
+        )
     
     def get_by_numero_id_with_relations(self, numero_id: int) -> SuspeitoEntity | None:
         numero_suspeito = (
