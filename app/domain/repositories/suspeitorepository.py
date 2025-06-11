@@ -6,6 +6,14 @@ from app.domain.entities.suspeitoemail import SuspeitoEmail
 class ISuspeitoRepository(ABC):
 
     @abstractmethod
+    def get_by_numero(self, numero: str) -> Suspeito | None:
+        """
+        Busca o suspeito relacionado a um número (se existir),
+        incluindo os números vinculados a esse suspeito.
+        """
+        pass
+
+    @abstractmethod
     def deletar(self, id: int):
         pass
     

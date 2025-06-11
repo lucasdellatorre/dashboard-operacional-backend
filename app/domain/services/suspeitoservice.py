@@ -141,3 +141,6 @@ class SuspeitoService:
         email.lastUpdateDate = datetime.utcnow()
 
         return self.suspeito_repository.update_email(email)
+
+    def get_by_numero_id(self, numero: str) -> SuspeitoEntity | None:
+        return self.suspeito_repository.get_by_numero(numero)
