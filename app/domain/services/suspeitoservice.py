@@ -18,6 +18,22 @@ class SuspeitoService:
     def get_by_id(self, id: int) -> SuspeitoEntity | None:
         return self.suspeito_repository.get_by_id_with_relations(id)
     
+    def get_info_e_numeros_by_id(self, id: int) -> dict | None:
+        suspeito: SuspeitoEntity = self.suspeito_repository.get_by_id(id)
+        if not suspeito:
+            return None
+        numeros: list[int] = self.suspeito_repository.get_numeros_by_suspeito_ids([id])
+        return {
+            "id": suspeito.id,
+            "nome": suspeito.nome,
+            "cpf": suspeito.cpf,
+            "apelido": suspeito.apelido,
+            "anotacoes": suspeito.anotacoes,
+            "relevante": suspeito.relevante,
+            "numeros": numeros
+        }
+
+    
     def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[dict]:
         numeros = self.suspeito_repository.get_numeros_by_suspeito_ids(suspeito_ids)
         return [{"numero": numero} for numero in numeros]
