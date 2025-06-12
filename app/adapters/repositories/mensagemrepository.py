@@ -319,31 +319,32 @@ class MensagemRepository(IMensagemRepository):
 
     def buscar_por_filtro(
             self,
-            numeros,
-            suspeitos,
-            operacoes,
-            grupo,
-            tipo,
-            data_inicial,
-            data_final,
-            hora_inicio,
-            hora_fim
-    ) -> list[dict]:
+            numeros: Optional[List[str]],
+            tickets: Optional[List[str]],
+            tipo: Optional[str],
+            grupo: Optional[str],
+            data_inicial: Optional[str],
+            data_final: Optional[str],
+            hora_inicio: Optional[str],
+            hora_fim: Optional[str]
+    ) -> List[dict]:
 
         query = self.session.query(ORMMensagem)
         filtros = []
-
         if numeros:
-            filtros.append(or_(ORMMensagem.remetente.in_(numeros), ORMMensagem.destinatario.in_(numeros)))
-        if operacoes:
-            filtros.append(ORMMensagem.internalTicketNumber.in_(operacoes))
-        if grupo and grupo.lower() != "all":
+            filtros.append(or_(
+                ORMMensagem.remetente.in_(numeros),
+                ORMMensagem.destinatario.in_(numeros)
+            ))
+        if tickets:
+            filtros.append(ORMMensagem.internalTicketNumber.in_(tickets))
+        if grupo and grupo != "all":
             grupo_lower = grupo.lower()
             if grupo_lower == "group":
                 filtros.append(ORMMensagem.grupoId.isnot(None))
             elif grupo_lower == "number":
                 filtros.append(ORMMensagem.grupoId.is_(None))
-        if tipo and tipo.lower() != "all":
+        if tipo and tipo != "all":
             filtros.append(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
         if data_inicial:
             filtros.append(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
@@ -353,12 +354,10 @@ class MensagemRepository(IMensagemRepository):
             filtros.append(ORMMensagem.hora >= hora_inicio)
         if hora_fim:
             filtros.append(ORMMensagem.hora <= hora_fim)
-
         query = query.filter(and_(*filtros))
-        mensagens = query.all()
+        mensagens_orm = query.all()
         resultados = []
-
-        for mensagem in mensagens:
+        for mensagem in mensagens_orm:
             resultados.append({
                 "id": mensagem.id,
                 "remetente": mensagem.remetente,

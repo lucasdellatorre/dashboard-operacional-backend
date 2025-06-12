@@ -68,10 +68,14 @@ class ExportController(Resource):
         try:
             data = request.get_json()
 
+            numeros = [str(n) for n in data.get("numeros", [])]
+            suspeitos = [int(s) for s in data.get("suspeitos", [])]
+            operacoes = [str(o) for o in data.get("operacoes", [])]
+
             dto = MensagensRequestDTO.from_dict({
-                "numeros": data.get("numeros", []),
-                "suspeitos": data.get("suspeitos", []),
-                "operacoes": data.get("operacoes", []),
+                "numeros": numeros,
+                "suspeitos": suspeitos,
+                "operacoes": operacoes,
                 "grupo": data.get("grupo"),
                 "tipo": data.get("tipo"),
                 "data_inicial": data.get("data_inicial"),

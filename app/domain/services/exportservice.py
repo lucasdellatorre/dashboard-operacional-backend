@@ -11,7 +11,6 @@ class ExportService:
             suspeito_csv = io.StringIO()
             writer1 = csv.writer(suspeito_csv)
             writer1.writerow(["ID", "Nome", "Apelido", "Numeros"])
-
             for s in suspeitos:
                 numeros = [ns.numero.numero for ns in s.numerosuspeito if ns.numero]
                 writer1.writerow([

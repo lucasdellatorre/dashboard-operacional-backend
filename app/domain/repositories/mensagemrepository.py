@@ -60,16 +60,26 @@ class IMensagemRepository(ABC):
     @abstractmethod
     def buscar_por_filtro(
             self,
-            numeros: Optional[List[str]],
-            suspeitos: Optional[List[str]],
-            operacoes: Optional[List[str]],
-            grupo: Optional[str],
-            tipo: Optional[str],
-            data_inicial: Optional[str],
-            data_final: Optional[str],
-            hora_inicio: Optional[str],
-            hora_fim: Optional[str]
-    ) -> List[dict]:
+            numeros: list[str],
+            tickets: list[str],
+            tipo: str,
+            grupo: str,
+            data_inicial: str,
+            data_final: str,
+            hora_inicio: str,
+            hora_fim: str
+    ) -> list[dict]:
+        """
+        Retorna uma lista de mensagens filtradas com base nos filtros fornecidos.
+        Cada item do resultado é um dicionário com os campos da mensagem:
+        {
+            "id": int,
+            "remetente": str,
+            "destinatario": str,
+            "tipoMensagem": str,
+            "timestamp": datetime
+        }
+        """
         raise NotImplementedError
 
     @abstractmethod

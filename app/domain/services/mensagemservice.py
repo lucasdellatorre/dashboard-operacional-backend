@@ -177,15 +177,24 @@ class MensagemService():
             hora_fim=hora_fim
         )
 
-    def buscar_por_filtro(self, filtro: MensagensRequestDTO):
+    def buscar_por_filtro(
+            self,
+            numeros: list[str],
+            tickets: list[str],
+            tipo: str,
+            grupo: str,
+            data_inicial: str,
+            data_final: str,
+            hora_inicio: str,
+            hora_fim: str
+    ) -> list[dict]:
         return self.repository.buscar_por_filtro(
-            numeros=filtro.numeros,
-            suspeitos=filtro.suspeitos,
-            operacoes=filtro.operacoes,
-            grupo=filtro.grupo,
-            tipo=filtro.tipo,
-            data_inicial=filtro.data_inicial,
-            data_final=filtro.data_final,
-            hora_inicio=filtro.hora_inicio,
-            hora_fim=filtro.hora_fim
+            numeros=numeros,
+            tickets=tickets,
+            tipo=tipo,
+            grupo=grupo,
+            data_inicial=data_inicial,
+            data_final=data_final,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim
         )
