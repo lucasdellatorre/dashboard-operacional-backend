@@ -1,35 +1,118 @@
-from app.application.dto.numeromessagecountdto import NumeroMessageCountRequestDTO, NumeroMessageCountResponseDTO
+from app.application.dto.numeromessagecountdto import NumeroMessageCountResponseDTO
 from app.domain.services.mensagemservice import MensagemService
 from app.domain.services.numeroservice import NumeroService
-from app.domain.entities.numero import Numero
-
-
+from app.domain.services.suspeitoservice import SuspeitoService
+from app.domain.services.interceptacaoservice import InterceptacaoService
+from app.application.dto.mensagensrequestdto import MensagensRequestDTO
+from app.domain.services.targetresolverservice import TargetResolverService
 class TeiaMessageCountUseCase:
-    def __init__(self, numero_service: NumeroService, mensagem_service: MensagemService):
+    def __init__(
+        self,
+        suspeito_service: SuspeitoService,
+        numero_service: NumeroService,
+        mensagem_service: MensagemService,
+        interceptacao_service: InterceptacaoService,
+        target_resolver_service: TargetResolverService
+    ):
+        self.suspeito_service = suspeito_service
         self.numero_service = numero_service
         self.mensagem_service = mensagem_service
+        self.interceptacao_service = interceptacao_service
+        self.target_resolver_service = target_resolver_service
 
-    def execute(self, request: NumeroMessageCountRequestDTO) -> NumeroMessageCountResponseDTO:
-        numeros_ids = request.numeros
+    def execute(self, request: MensagensRequestDTO) -> NumeroMessageCountResponseDTO:
+        RED = 3  # Suspeito
+        GRAY = 7  # Número avulso
+
         nodes = []
         links = []
-        RED = 3
-        GRAY = 7
-        
-        for id in numeros_ids:
-            numero: Numero = self.numero_service.find(id)
-            numero_telefone = numero.numero
-            
-            is_alvo = self.numero_service.isAlvo(id)
-            
-            node = { "id": numero_telefone, "group": RED if is_alvo else GRAY }
-            nodes.append(node)            
-            
-            if not is_alvo: continue
-            
-            relations: dict[str, int] = self.mensagem_service.count_mensagens_por_alvo(numero)
-            
-            for target, value in relations.items():
-                links.append({ "source": numero_telefone, "target": target, "value": value })
-                
-        return NumeroMessageCountResponseDTO(nodes, links)
+        added_nodes = set()
+
+        if not (request.suspeitos or request.numeros or request.operacoes):
+            raise ValueError("É necessário informar ao menos um dos seguintes: suspeitos, números ou operações.")
+
+        # Se tem apenas operações, busca numeros na target resolver
+        if not request.suspeitos and not request.numeros:
+            numero_ids, tickets = self.target_resolver_service.resolver_alvos(request)
+            request.numeros = numero_ids
+            request.operacoes = tickets
+        else:
+            tickets = []
+            if request.operacoes:
+                interceptacoes = self.interceptacao_service.get_interceptacoes_por_operacoes(request.operacoes)
+                tickets = [i.internalTicketNumber for i in interceptacoes]
+
+            for suspeito_id in request.suspeitos:
+                suspeito = self.suspeito_service.get_info_e_numeros_by_id(suspeito_id)
+                if not suspeito:
+                    continue
+                nome = suspeito.get("apelido") or suspeito.get("nome") or "Desconhecido"
+                node_id = nome
+
+                if node_id not in added_nodes:
+                    nodes.append({
+                        "id": node_id,
+                        "label": nome,
+                        "group": RED
+                    })
+                    added_nodes.add(node_id)
+
+                numeros_alvo = [
+                    n for n in suspeito.get("numeros", [])
+                ]
+
+                if not numeros_alvo:
+                    continue
+
+                for numero in numeros_alvo:
+                    resultados = self.mensagem_service.obter_quantidade_mensagens_por_contato(
+                        numeros=[numero],
+                        tickets=tickets,
+                        tipo=request.tipo,
+                        grupo=request.grupo,
+                        data_inicial=request.data_inicial,
+                        data_final=request.data_final,
+                        hora_inicio=request.hora_inicio,
+                        hora_fim=request.hora_fim
+                    )
+
+                    for resultado in resultados:
+                        contato = resultado["contato"]
+                        qtd = resultado["qtdMensagens"]
+
+                        links.append({
+                            "source": node_id,
+                            "target": contato,
+                            "value": qtd
+                        })
+
+        for numero in request.numeros:
+            if numero not in added_nodes:
+                nodes.append({
+                    "id": numero,
+                    "group": GRAY
+                })
+                added_nodes.add(numero)
+
+            resultados = self.mensagem_service.obter_quantidade_mensagens_por_contato(
+                numeros=[numero],
+                tickets=tickets,
+                tipo=request.tipo,
+                grupo=request.grupo,
+                data_inicial=request.data_inicial,
+                data_final=request.data_final,
+                hora_inicio=request.hora_inicio,
+                hora_fim=request.hora_fim
+            )
+
+            for resultado in resultados:
+                contato = resultado["contato"]
+                qtd = resultado["qtdMensagens"]
+
+                links.append({
+                    "source": numero,
+                    "target": contato,
+                    "value": qtd
+                })
+
+        return NumeroMessageCountResponseDTO(nodes=nodes, links=links)

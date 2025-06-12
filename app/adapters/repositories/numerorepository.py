@@ -21,6 +21,10 @@ class NumeroRepository(INumeroRepository):
     def find(self, numero_id) -> DomainNumero:
         result = self.session.query(ORMNumero).get(int(numero_id))
         return ORMNumero.toNumeroEntidade(result)
+
+    def isNumero(self, numero_id) -> bool:
+        result = self.session.query(ORMNumero).get(int(numero_id))
+        return result
     
     def isAlvo(self, numero_id) -> bool:
         result = self.session.query(ORMInterceptacaoNumero).filter(ORMInterceptacaoNumero.numeroId == int(numero_id), ORMInterceptacaoNumero.isAlvo == True).first()

@@ -7,7 +7,4 @@ class GetAllIPUseCase:
         self.ip_service = ip_service
 
     def execute(self) -> List[IPDTO]:
-        ips = self.ip_service.list_ips()
-        ips_sorted = sorted(ips, key=lambda ip: ip.timestamp, reverse=True)
-        return [IPDTO.fromEntity(ip) for ip in ips_sorted]
-    
+        return self.ip_service.list_ips()

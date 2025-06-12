@@ -336,11 +336,22 @@ class PlanilhaRepository:
                     recipient = self.get_or_create_numero(recipient_num, numeros_cache)
                     self.get_or_create_interceptacao_numero(recipient, interceptacao, recipient_num == row.ALVO, interceptacao_cache, novos_interceptacao_numeros)
 
+                    def safe_str(val):
+                        if pd.isna(val):
+                            return None
+                        if isinstance(val, str) and val.strip().lower() == 'nan':
+                            return None
+                        return str(val).strip()
+
+                    group_id = safe_str(row.GROUP_ID)
+                    remetente = safe_str(row.SENDER)
+                    destinatario = safe_str(recipient_num)
+
                     mensagem = Mensagem(
                         internalTicketNumber=row.INTERNAL_TICKET_NUMBER,
                         messageExternalId=row.MESSAGE_ID,
-                        grupoId=str(row.GROUP_ID),
-                        remetente=row.SENDER,
+                        grupoId=group_id,
+                        remetente=remetente,
                         remetenteIp=str(row.SENDER_IP),
                         remetenteDispositivo=row.SENDER_DEVICE,
                         remetentePorta=row.SENDER_PORT,
@@ -350,16 +361,27 @@ class PlanilhaRepository:
                         data=row.DATA,
                         hora=row.HORA,
                         timestamp=ts_val,
-                        destinatario=recipient_num,
+                        destinatario=destinatario,
                         numeroId=alvo.id
                     )
                     self.session.add(mensagem)
             else:
+                def safe_str(val):
+                    if pd.isna(val):
+                        return None
+                    if isinstance(val, str) and val.strip().lower() == 'nan':
+                        return None
+                    return str(val).strip()
+
+                group_id = safe_str(row.GROUP_ID)
+                remetente = safe_str(row.SENDER)
+                destinatario = safe_str(recipient_num)
+
                 mensagem = Mensagem(
                     internalTicketNumber=row.INTERNAL_TICKET_NUMBER,
                     messageExternalId=row.MESSAGE_ID,
-                    grupoId=str(row.GROUP_ID),
-                    remetente=row.SENDER,
+                    grupoId=group_id,
+                    remetente=remetente,
                     remetenteIp=str(row.SENDER_IP),
                     remetenteDispositivo=row.SENDER_DEVICE,
                     remetentePorta=row.SENDER_PORT,
@@ -369,7 +391,7 @@ class PlanilhaRepository:
                     data=row.DATA,
                     hora=row.HORA,
                     timestamp=ts_val,
-                    destinatario=row.RECIPIENTS,
+                    destinatario=destinatario,
                     numeroId=alvo.id
                 )
                 self.session.add(mensagem)

@@ -1,16 +1,32 @@
 from abc import ABC, abstractmethod
+from typing import List, Optional
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.entities.suspeito import Suspeito
 from app.domain.entities.suspeitoemail import SuspeitoEmail
 
 
 class ISuspeitoRepository(ABC):
+
     @abstractmethod
-    def atualizar(self, id: int, dados: dict) -> dict:
-        raise (NotImplementedError)
+    def deletar(self, id: int):
+        pass
+    
+    @abstractmethod
+    def atualizar(self, entity: Suspeito):
+        pass
 
     @abstractmethod
     def get_by_id_with_relations(self, id: int) -> Suspeito | None:
         """Busca um suspeito por ID com todas as relações carregadas."""
+        pass
+
+    @abstractmethod
+    def get_by_id(self, id: int) -> Suspeito | None:
+        pass
+
+    @abstractmethod
+    def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[str]:
         pass
 
     @abstractmethod
@@ -56,3 +72,33 @@ class ISuspeitoRepository(ABC):
         Retorna todos emails do suspeito.
         """
         pass
+
+    @abstractmethod
+    def is_suspeito(self) -> bool:
+        raise(NotImplementedError)
+
+    @abstractmethod
+    def add_telefone(self, suspeito_id, telefones, cpf) -> bool:
+        """
+        Adiciona telefones novos para um suspeito
+        """
+        pass
+
+    @abstractmethod
+    def get_email_by_id(self, email_id: int) -> SuspeitoEmail | None:
+        """
+        Busca um objeto SuspeitoEmail pelo ID.
+        """
+        pass
+
+    @abstractmethod
+    def update_email(self, email: SuspeitoEmail) -> SuspeitoEmail:
+        """
+        Atualiza um email existente.
+        Deve retornar o objeto atualizado.
+        """
+        pass
+
+    @abstractmethod
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[Suspeito]:
+        raise NotImplementedError
