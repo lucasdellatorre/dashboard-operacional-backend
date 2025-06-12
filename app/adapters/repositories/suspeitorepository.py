@@ -368,7 +368,7 @@ class SuspeitoRepository(ISuspeitoRepository):
             hora_fim: Optional[str]
         ) -> List[Suspeito]:
 
-        query = self.session.query(ORMSuspeito)
+        query = self.session.query(ORMSuspeito).join(ORMNumeroSuspeito)
         if suspeitos:
             query = query.filter(ORMSuspeito.id.in_(suspeitos))
 

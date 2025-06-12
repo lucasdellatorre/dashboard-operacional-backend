@@ -68,7 +68,7 @@ class ExportController(Resource):
         try:
             data = request.get_json()
 
-            numeros = [str(n) for n in data.get("numeros", [])]
+            numeros = [int(n) for n in data.get("numeros", [])]
             suspeitos = [int(s) for s in data.get("suspeitos", [])]
             operacoes = [str(o) for o in data.get("operacoes", [])]
 

@@ -328,33 +328,44 @@ class MensagemRepository(IMensagemRepository):
             hora_inicio: Optional[str],
             hora_fim: Optional[str]
     ) -> List[dict]:
-
-        query = self.session.query(ORMMensagem)
-        filtros = []
-        if numeros:
-            filtros.append(or_(
-                ORMMensagem.remetente.in_(numeros),
-                ORMMensagem.destinatario.in_(numeros)
-            ))
+        numeros_ids = []
+        for numero in numeros or []:
+            if len(numero) < 9:
+                numeros_ids.append(numero)
+                
+        
+        query = self.session.query(ORMMensagem).filter(or_(
+                    ORMMensagem.numeroId.in_(numeros_ids),
+                    ORMMensagem.remetente.in_(numeros)
+                ))
+        
         if tickets:
-            filtros.append(ORMMensagem.internalTicketNumber.in_(tickets))
-        if grupo and grupo != "all":
+            query = query.filter(ORMMensagem.internalTicketNumber.in_(tickets))
+
+        if grupo and grupo.lower() != "all":
             grupo_lower = grupo.lower()
             if grupo_lower == "group":
-                filtros.append(ORMMensagem.grupoId.isnot(None))
+                query = query.filter(ORMMensagem.grupoId.isnot(None))
             elif grupo_lower == "number":
-                filtros.append(ORMMensagem.grupoId.is_(None))
-        if tipo and tipo != "all":
-            filtros.append(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
+                query = query.filter(ORMMensagem.grupoId.is_(None))
+            else:
+                logger.warning(f"Grupo '{grupo}' não reconhecido. Nenhum filtro aplicado.")
+
+        if tipo and tipo.lower() != "all":
+            query = query.filter(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
+
         if data_inicial:
-            filtros.append(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
+
         if data_final:
-            filtros.append(func.cast(ORMMensagem.data, db.Date) <= data_final)
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) <= data_final)
+
         if hora_inicio:
-            filtros.append(ORMMensagem.hora >= hora_inicio)
+            query = query.filter(ORMMensagem.hora >= hora_inicio)
+
         if hora_fim:
-            filtros.append(ORMMensagem.hora <= hora_fim)
-        query = query.filter(and_(*filtros))
+            query = query.filter(ORMMensagem.hora <= hora_fim)
+    
         mensagens_orm = query.all()
         resultados = []
         for mensagem in mensagens_orm:
