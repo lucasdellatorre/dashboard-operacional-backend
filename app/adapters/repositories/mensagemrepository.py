@@ -1,8 +1,6 @@
 from typing import List, Optional
-
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, or_, and_
-
+from sqlalchemy import extract, func, case, or_, and_
 from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.mensagemrepository import IMensagemRepository
 from app.infraestructure.database.db import db
@@ -36,6 +34,8 @@ class MensagemRepository(IMensagemRepository):
         self,
         numeros: list[str],
         tickets: list[str],
+        grupo: str,
+        tipo: str,
         data_inicial: str,
         data_final: str,
         hora_inicio: str,
@@ -68,6 +68,18 @@ class MensagemRepository(IMensagemRepository):
                 contato_not_null
             )
         )
+        
+        if grupo and grupo.lower() != "all":
+            grupo_lower = grupo.lower()
+            if grupo_lower == "group":
+                query = query.filter(ORMMensagem.grupoId.isnot(None))
+            elif grupo_lower == "number":
+                query = query.filter(ORMMensagem.grupoId.is_(None))
+            else:
+                logger.warning(f"Grupo '{grupo}' não reconhecido. Nenhum filtro aplicado.")
+
+        if tipo and tipo.lower() != "all":
+            query = query.filter(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
 
         if tickets:
             query = query.filter(ORMMensagem.internalTicketNumber.in_(tickets))
