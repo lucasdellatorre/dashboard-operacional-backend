@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import List
 
 from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.mensagemrepository import IMensagemRepository
@@ -156,7 +157,6 @@ class MensagemService():
             hora_inicio=hora_inicio,
             hora_fim=hora_fim
         )
-        return resultados
 
     def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
         return self.repository.buscar_por_filtro(

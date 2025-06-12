@@ -5,6 +5,7 @@ from zipfile import ZipFile
 import traceback
 
 from app.application.dto.filtrodto import FiltroDTO
+from app.application.factories.exportfactory import ExportFactory
 from app.domain.services.exportservice import ExportService
 from app.infraestructure.utils.logger import logger
 
@@ -59,5 +60,5 @@ api = Api(blueprint_export)
 api.add_resource(
     ExportCSVController,
     "/exportar/csv",
-    resource_class_kwargs={"export_service": ExportService()}
+    resource_class_kwargs={"export_service": ExportFactory.build_export_service()}
 )

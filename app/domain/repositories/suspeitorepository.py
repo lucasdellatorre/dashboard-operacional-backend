@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.entities.suspeito import Suspeito
 from app.domain.entities.suspeitoemail import SuspeitoEmail
 
@@ -99,16 +100,5 @@ class ISuspeitoRepository(ABC):
         pass
 
     @abstractmethod
-    def buscar_por_filtro(
-            self,
-            numeros: List[str],
-            operacoes: List[str],
-            grupo: Optional[str],
-            tipo: Optional[str],
-            data_inicial: Optional[str],
-            data_final: Optional[str],
-            hora_inicial: Optional[str],
-            hora_final: Optional[str],
-            dias_semana: Optional[List[int]]
-    ) -> List[Suspeito]:
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[Suspeito]:
         raise NotImplementedError

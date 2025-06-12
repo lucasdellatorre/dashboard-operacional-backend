@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
 
 class IMensagemRepository(ABC):
@@ -58,16 +60,8 @@ class IMensagemRepository(ABC):
     @abstractmethod
     def buscar_por_filtro(
             self,
-            numeros: List[str],
-            tickets: List[str],
-            tipo: Optional[str],
-            grupo: Optional[str],
-            data_inicial: Optional[str],
-            data_final: Optional[str],
-            hora_inicio: Optional[str],
-            hora_fim: Optional[str],
-            dias_semana: Optional[List[int]]
-    ) -> List[dict]:
+            filtro: FiltroDTO
+        ) -> List[dict]:
         raise NotImplementedError
 
     @abstractmethod

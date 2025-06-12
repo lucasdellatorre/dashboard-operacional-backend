@@ -1,7 +1,11 @@
 from datetime import datetime
+from typing import List
+
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
@@ -349,4 +353,28 @@ class SuspeitoRepository(ISuspeitoRepository):
         orm_email.lastUpdateDate = email.lastUpdateDate
 
         db.session.commit()
-        return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)    
+        return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)
+
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[SuspeitoEntity]:
+        try:
+            query = self.session.query(ORMSuspeito)
+
+            if filtro.numero:
+                query = query.join(ORMSuspeito.numero_suspeitos).join(ORMNumeroSuspeito.numero)
+                query = query.filter(ORMNumero.numero.in_(filtro.numero))
+
+            if filtro.operacoes:
+                pass
+
+
+            suspeitos_orm = query.all()
+
+            resultados = []
+            for orm_obj in suspeitos_orm:
+                resultados.append(ORMSuspeito.toEntity(orm_obj))
+
+            return resultados
+
+        except Exception as e:
+            logger.error(f"Erro em buscar_por_filtro: {e}")
+            return []
