@@ -65,6 +65,24 @@ class MensagemService():
             hora_inicio=hora_inicio,
             hora_fim=hora_fim
         )
+        
+    def obter_quantidade_mensagens_por_ip(
+        self,
+        numeros: list[str],
+        tickets: list[str],
+        data_inicial: str,
+        data_final: str,
+        hora_inicio: str,
+        hora_fim: str
+    ) -> list[dict]:
+        return self.repository.contar_mensagens_por_ip(
+            numeros=numeros,
+            tickets=tickets,
+            data_inicial=data_inicial,
+            data_final=data_final,
+            hora_inicio=hora_inicio,
+            hora_fim=hora_fim
+        )
     
     def obter_quantidade_mensagens_por_horario(
         self,

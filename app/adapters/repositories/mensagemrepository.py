@@ -8,6 +8,7 @@ from app.domain.repositories.mensagemrepository import IMensagemRepository
 from app.infraestructure.database.db import db
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
 from app.adapters.repositories.entities.mensagens import Mensagem as ORMMensagem
+from app.adapters.repositories.entities.ip import IP as ORMIp
 from app.infraestructure.utils.logger import logger
 
 class MensagemRepository(IMensagemRepository):
@@ -35,8 +36,6 @@ class MensagemRepository(IMensagemRepository):
         self,
         numeros: list[str],
         tickets: list[str],
-        tipo: str,
-        grupo: str,
         data_inicial: str,
         data_final: str,
         hora_inicio: str,
@@ -73,18 +72,6 @@ class MensagemRepository(IMensagemRepository):
         if tickets:
             query = query.filter(ORMMensagem.internalTicketNumber.in_(tickets))
 
-        if grupo and grupo.lower() != "all":
-            grupo_lower = grupo.lower()
-            if grupo_lower == "group":
-                query = query.filter(ORMMensagem.grupoId.isnot(None))
-            elif grupo_lower == "number":
-                query = query.filter(ORMMensagem.grupoId.is_(None))
-            else:
-                logger.warning(f"Grupo '{grupo}' não reconhecido. Nenhum filtro aplicado.")
-
-        if tipo and tipo.upper() != "all":
-            query = query.filter(ORMMensagem.tipoMensagem == tipo)
-
         if data_inicial:
             query = query.filter(ORMMensagem.data >= data_inicial)
 
@@ -102,8 +89,6 @@ class MensagemRepository(IMensagemRepository):
         resultados = query.all()
 
         return [{"contato": r.contato, "qtdMensagens": r.qtdMensagens} for r in resultados]
-
-    from sqlalchemy import case, func, or_
 
     def contar_mensagens_por_horario(
         self,
