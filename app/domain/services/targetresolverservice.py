@@ -1,5 +1,6 @@
 from typing import Tuple, List
 from app.application.dto.mensagensrequestdto import MensagensRequestDTO
+from app.application.dto.teiaipmessagecountdto import TeiaIPMessageCountRequestDTO
 from app.domain.services.suspeitoservice import SuspeitoService
 from app.domain.services.interceptacaoservice import InterceptacaoService
 from app.domain.services.interceptacaonumeroservice import InterceptacaoNumeroService
@@ -9,7 +10,6 @@ class TargetResolverService:
         self.suspeito_service: SuspeitoService = suspeito_service
         self.interceptacao_service: InterceptacaoService = interceptacao_service
         self.interceptacao_numero_service: InterceptacaoNumeroService = interceptacao_numero_service
-
     def resolver_alvos(self, filtros: MensagensRequestDTO) -> Tuple[List[str], List[str]]:
         if not (filtros.suspeitos or filtros.numeros or filtros.operacoes):
             raise ValueError("É necessário informar ao menos um dos seguintes: suspeitos, números ou operações.")

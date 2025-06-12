@@ -22,7 +22,7 @@ class IPController(Resource):
         """
         try:
             ips = self.get_all_ip_use_case.execute()
-            return {'IPs': [ip.to_dict() for ip in ips]}, 200
+            return ips, 200
         except Exception as e:
             print(f'An error occurred: {e}')
             return {'Message': 'Internal Server Error'}, 500
