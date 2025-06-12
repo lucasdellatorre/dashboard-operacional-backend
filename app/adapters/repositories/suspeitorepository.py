@@ -1,6 +1,5 @@
 from datetime import datetime
 from typing import List, Optional
-
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
@@ -354,7 +353,7 @@ class SuspeitoRepository(ISuspeitoRepository):
 
         db.session.commit()
         return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)
-
+      
     def buscar_por_filtro(
             self,
             numeros: Optional[List[str]],

@@ -316,7 +316,7 @@ class MensagemRepository(IMensagemRepository):
         resultados = query.all()
 
         return [{"ip": r.ip, "qtdMensagens": r.qtdMensagens} for r in resultados]
-
+      
     def buscar_por_filtro(
             self,
             numeros: Optional[List[str]],
@@ -367,6 +367,7 @@ class MensagemRepository(IMensagemRepository):
             query = query.filter(ORMMensagem.hora <= hora_fim)
     
         mensagens_orm = query.all()
+      
         resultados = []
         for mensagem in mensagens_orm:
             resultados.append({
