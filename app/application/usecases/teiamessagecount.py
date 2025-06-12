@@ -18,7 +18,7 @@ class TeiaMessageCountUseCase:
         self.numero_service = numero_service
         self.mensagem_service = mensagem_service
         self.interceptacao_service = interceptacao_service
-        self.target_resolver_service = target_resolver_service    
+        self.target_resolver_service = target_resolver_service
 
     def execute(self, request: MensagensRequestDTO) -> NumeroMessageCountResponseDTO:
         RED = 3  # Suspeito
@@ -30,7 +30,7 @@ class TeiaMessageCountUseCase:
 
         if not (request.suspeitos or request.numeros or request.operacoes):
             raise ValueError("É necessário informar ao menos um dos seguintes: suspeitos, números ou operações.")
-        
+
         # Se tem apenas operações, busca numeros na target resolver
         if not request.suspeitos and not request.numeros:
             numero_ids, tickets = self.target_resolver_service.resolver_alvos(request)
@@ -95,7 +95,7 @@ class TeiaMessageCountUseCase:
                 added_nodes.add(numero)
 
             resultados = self.mensagem_service.obter_quantidade_mensagens_por_contato(
-                numeros=[numero],   
+                numeros=[numero],
                 tickets=tickets,
                 tipo=request.tipo,
                 grupo=request.grupo,
