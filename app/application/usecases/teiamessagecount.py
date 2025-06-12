@@ -52,6 +52,7 @@ class TeiaMessageCountUseCase:
                 if node_id not in added_nodes:
                     nodes.append({
                         "id": node_id,
+                        "suspeitoId": suspeito_id,
                         "label": nome,
                         "group": RED
                     })
