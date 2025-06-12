@@ -1,8 +1,8 @@
+import time
 from flask import Blueprint
 from flask_restful import Api, Resource
 from app.application.usecases.getallnumbersusecase import GetAllNumbersUseCase
 from app.application.factories.listanumerofactory import ListaNumerosFactory
-import time
 
 class NumeroController(Resource):
     def __init__(self, **kwargs):
@@ -51,6 +51,6 @@ api.add_resource(
     NumeroController,
     '/numeros',
     resource_class_kwargs={
-        'get_all_numeros': ListaNumerosFactory.listar()
+        'get_all_numeros': ListaNumerosFactory.listar(),
     }
 )

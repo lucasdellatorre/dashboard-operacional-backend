@@ -1,3 +1,5 @@
+from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
+from app.domain.services.numeroservice import NumeroService
 from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
 from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
 from app.domain.services.suspeitoservice import SuspeitoService
@@ -41,6 +43,12 @@ class SuspeitoFactory:
     @staticmethod
     def atualizar_suspeito():
         return AtualizarSuspeitoUseCase(SuspeitoFactory.build_service())
+    
+    @staticmethod
+    def adicionar_telefones():
+        num_repo = NumeroRepository()
+        num_service = NumeroService(num_repo)
+        return AdicionaNumeroSuspeitoUseCase(num_service, SuspeitoFactory.build_service())
     
     @staticmethod
     def delete_suspeito():

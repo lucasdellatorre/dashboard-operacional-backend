@@ -1,17 +1,22 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
+from app.application.dto.patchnumerosuspeitodto import PatchNumeroSuspeitoDTO
 from app.application.factories.suspeitofactory import SuspeitoFactory
 from app.application.factories.numerosuspeitofactory import NumeroSuspeitoFactory
 from app.application.dto.createsuspeitodto import CreateSuspeitoDTO
+from app.application.usecases.adicionanumerosuspeitousecase import AdicionaNumeroSuspeitoUseCase
 from app.application.usecases.atualizarsuspeitousecase import AtualizarSuspeitoUseCase
+from app.application.usecases.deletarsuspeitousecase import DeletarSuspeitoUseCase
+from app.application.usecases.getsuspeitobyidusecase import GetSuspeitoByIdUseCase
 from app.application.usecases.deletenumerosuspeitousecase import DeleteNumeroSuspeitoUseCase
+from app.application.usecases.createsuspeitousecase import CreateSuspeitoUseCase
 from app.application.dto.suspeitoupdatedto import SuspeitoUpdateDTO
 
 class SuspeitoController(Resource):
     def __init__(self, **kwargs):
       self.atualizar_suspeito: AtualizarSuspeitoUseCase = kwargs["atualizar_suspeito"]
-      self.deletar_suspeito: AtualizarSuspeitoUseCase = kwargs["deletar_suspeito"]
-      self.get_suspeito_by_id_use_case = kwargs["get_suspeito_by_id_use_case"]
+      self.deletar_suspeito: DeletarSuspeitoUseCase = kwargs["deletar_suspeito"]
+      self.get_suspeito_by_id_use_case: GetSuspeitoByIdUseCase= kwargs["get_suspeito_by_id_use_case"]
         
     def put(self, id):
         """
@@ -146,8 +151,7 @@ class SuspeitoController(Resource):
                 
 class SuspeitoCreateController(Resource):
     def __init__(self, **kwargs):
-        self.create_suspeito_use_case = kwargs['create_suspeito_use_case']
-
+        self.create_suspeito_use_case: CreateSuspeitoUseCase = kwargs['create_suspeito_use_case']
     def post(self):
         """
         Cria um novo suspeito.
@@ -196,18 +200,52 @@ class SuspeitoCreateController(Resource):
 
         try:
             dto = CreateSuspeitoDTO.from_dict(data)
-            dto.lastUpdateCpf = cpf_usuario  # ← atribui o CPF do usuário que criou
+            dto.lastUpdateCpf = cpf_usuario
             result = self.create_suspeito_use_case.execute(dto)
             return result.to_dict(), 201
         except ValueError as e:
             return {"message": str(e)}, 400
         except Exception as e:
             print(f"[ERROR] {e}")
-            return {"message": "Erro interno no servidor"}, 500       
+            return {"message": "Erro interno no servidor"}, 500
+
+
+class SuspeitoDetailController(Resource):
+    def __init__(self, **kwargs):
+        self.get_suspeito_by_id_use_case: GetSuspeitoByIdUseCase = kwargs['get_suspeito_by_id_use_case']
+    def get(self, id: int):
+        """
+        Busca os dados detalhados de um suspeito pelo ID.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: integer
+            description: ID do suspeito
+        responses:
+          200:
+            description: Suspeito encontrado com sucesso
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        try:
+            suspeito = self.get_suspeito_by_id_use_case.execute(id)
+            if not suspeito:
+                return {"message": "Suspeito não encontrado"}, 404
+            return suspeito.to_dict(), 200
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return {"message": "Erro interno no servidor"}, 500
         
 class ManageNumeroController(Resource):
     def __init__(self, **kwargs):
-        self.delete_numero_use_case:DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
+        self.delete_numero_use_case: DeleteNumeroSuspeitoUseCase = kwargs['delete_numero_use_case']
 
     def delete(self, id: int, numeroId: int):
         """
@@ -245,6 +283,64 @@ class ManageNumeroController(Resource):
         except Exception as e:
             print(f"[ERROR] {e}")
             return {"message": "Erro interno no servidor"}, 500
+          
+class AtualizaNumeroController(Resource):
+    def __init__(self, **kwargs):
+        self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
+              
+    def post(self, id: int):
+        """
+        Adiciona uma lista de telefones para um suspeito.
+        ---
+        tags:
+          - Suspeito
+        parameters:
+          - name: id
+            in: path
+            required: true
+            type: integer
+            description: ID do suspeito
+          - name: body
+            in: body
+            required: true
+            schema:
+              type: object
+              required:
+                - numerosIds
+              properties:
+                numerosIds:
+                  type: array
+                  items:
+                    type: integer
+                  example: [1, 2, 3]
+                  description: Lista de IDs dos telefones a serem vinculados
+          - name: cpfUsuario
+            in: header
+            required: true
+            type: string
+            example: "12345678900"
+            description: CPF do usuário autenticado
+        responses:
+          200:
+            description: Telefones adicionados com sucesso ao suspeito
+          404:
+            description: Suspeito não encontrado
+          500:
+            description: Erro interno
+        """
+        data = request.get_json()
+        cpfUsuario = request.headers.get("cpfUsuario")
+        try:
+            numero_suspeito_dto = PatchNumeroSuspeitoDTO(**data | { 'cpf': cpfUsuario, 'suspeitoId': id })
+            result = self.adicionar_numero_suspeito_use_case.execute(numero_suspeito_dto)
+            if result:
+              return { 'Message:': 'números adicionados com sucesso!' }, 200
+            return { 'Message:': 'erro ao adicionar números' }, 400
+        except ValueError as ve:
+            return {'message': str(ve)}, 404
+        except Exception as e:
+            print(f'[ERRO PATCH /numeros]: {e}')
+            return {'message': 'Erro interno no servidor.'}, 500
 
 # Blueprint e API registration
 blueprint_suspeito = Blueprint('blueprint_suspeito', __name__)
@@ -269,9 +365,26 @@ api.add_resource(
 )
 
 api.add_resource(
+    SuspeitoDetailController,
+    "/suspeito/<int:id>",
+    resource_class_kwargs={
+        "get_suspeito_by_id_use_case": SuspeitoFactory.get_suspeito_by_id()
+    }
+)
+
+api.add_resource(
+    AtualizaNumeroController,
+    "/suspeito/<int:id>/numero",
+    resource_class_kwargs={
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
+    }
+)
+
+api.add_resource(
     ManageNumeroController,
     "/suspeito/<int:id>/numero/<int:numeroId>",
     resource_class_kwargs={
-        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number()
+        "delete_numero_use_case": NumeroSuspeitoFactory.delete_number(),
+        "adicionar_numero_suspeito_use_case": SuspeitoFactory.adicionar_telefones()
     }
 )

@@ -1,17 +1,16 @@
 from flask import Blueprint, request
 from flask_restful import Api, Resource
-from app.application.usecases.getmensagensporcontatousecase import GetMensagensPorContatoUseCase
-from app.application.factories.mensagensdashboardfactory import MensagensDashboardFactory
 from app.application.dto.mensagensrequestdto import MensagensRequestDTO
-import time
+from app.application.factories.mensagemipfactory import MensagemIpFactory
+from app.application.usecases.buscarmensagemporipusecase import BuscarMensagemPorIPUseCase
 
-class MensagensDashboardController(Resource):
+class MensagemIPController(Resource):
     def __init__(self, **kwargs):
-        self.get_mensagens_por_contato: GetMensagensPorContatoUseCase = kwargs['get_mensagens_por_contato']
+        self.buscar_mensagem_usecase: BuscarMensagemPorIPUseCase = kwargs["buscar_mensagem_usecase"]
 
     def get(self):
         """
-        Retorna a quantidade de mensagens por contato de cada número ou suspeito informado.
+        Retorna a quantidade de mensagens por IP com filtros.
         ---
         tags:
           - Mensagens
@@ -73,7 +72,7 @@ class MensagensDashboardController(Resource):
               type: string
         responses:
           200:
-            description: Lista de contatos com a quantidade de mensagens.
+            description: Lista de IPs com a quantidade de mensagens.
             content:
               application/json:
                 schema:
@@ -90,7 +89,6 @@ class MensagensDashboardController(Resource):
           500:
             description: Erro interno no servidor
         """
-        start_time = time.time()
         try:
             data = request.args.to_dict(flat=False)
 
@@ -106,27 +104,20 @@ class MensagensDashboardController(Resource):
                 "hora_fim": request.args.get("hora_fim"),
             })
 
-            resultado = self.get_mensagens_por_contato.execute(dto)
-            return resultado, 200
+            result = self.buscar_mensagem_usecase.execute(dto)
+            return result, 200
 
-        except ValueError as ve:
-            return {'message': str(ve)}, 400
         except Exception as e:
-            print(f'[ERRO /mensagens]: {e}')
-            return {'message': 'Erro interno no servidor.'}, 500
-        finally:
-            duration_ms = (time.time() - start_time) * 1000
-            print(f'[INFO /mensagens] Tempo de execução: {duration_ms:.2f} ms')
+            print(f"[Erro] /mensagens/ip: {e}")
+            return {"message": "Erro interno no servidor."}, 500
 
-
-# Blueprint e rota
-blueprint_mensagens = Blueprint('blueprint_mensagens', __name__)
-api = Api(blueprint_mensagens)
+blueprint_mensagem_ip = Blueprint("blueprint_mensagem_ip", __name__)
+api = Api(blueprint_mensagem_ip)
 
 api.add_resource(
-    MensagensDashboardController,
-    '/mensagens/contatos',
+    MensagemIPController,
+    "/mensagens/ip",
     resource_class_kwargs={
-        'get_mensagens_por_contato': MensagensDashboardFactory.get_mensagens_por_contato()
+        "buscar_mensagem_usecase": MensagemIpFactory.buscar_mensagens_por_ip()
     }
 )
