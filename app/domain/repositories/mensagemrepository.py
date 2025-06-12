@@ -60,8 +60,16 @@ class IMensagemRepository(ABC):
     @abstractmethod
     def buscar_por_filtro(
             self,
-            filtro: FiltroDTO
-        ) -> List[dict]:
+            numeros: Optional[List[str]],
+            suspeitos: Optional[List[str]],
+            operacoes: Optional[List[str]],
+            grupo: Optional[str],
+            tipo: Optional[str],
+            data_inicial: Optional[str],
+            data_final: Optional[str],
+            hora_inicio: Optional[str],
+            hora_fim: Optional[str]
+    ) -> List[dict]:
         raise NotImplementedError
 
     @abstractmethod

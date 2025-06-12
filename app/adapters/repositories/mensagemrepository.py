@@ -317,44 +317,48 @@ class MensagemRepository(IMensagemRepository):
 
         return [{"ip": r.ip, "qtdMensagens": r.qtdMensagens} for r in resultados]
 
-    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
-        query = self.session.query(ORMMensagem)
+    def buscar_por_filtro(
+            self,
+            numeros,
+            suspeitos,
+            operacoes,
+            grupo,
+            tipo,
+            data_inicial,
+            data_final,
+            hora_inicio,
+            hora_fim
+    ) -> list[dict]:
 
+        query = self.session.query(ORMMensagem)
         filtros = []
 
-        if filtro.numero:
-            filtros.append(ORMMensagem.remetente.in_(filtro.numero) | ORMMensagem.destinatario.in_(filtro.numero))
-
-        if filtro.operacoes:
-            filtros.append(ORMMensagem.internalTicketNumber.in_(filtro.operacoes))
-
-        if filtro.tipo and filtro.tipo != "all":
-            filtros.append(ORMMensagem.tipoMensagem == filtro.tipo)
-
-        if filtro.grupo and filtro.grupo != "all":
-            filtros.append(ORMMensagem.grupoId == filtro.grupo)
-
-        if filtro.data_inicial:
-            filtros.append(ORMMensagem.data >= filtro.data_inicial)
-
-        if filtro.data_final:
-            filtros.append(ORMMensagem.data <= filtro.data_final)
-
-        if filtro.hora_inicial:
-            filtros.append(ORMMensagem.hora >= filtro.hora_inicial)
-
-        if filtro.hora_final:
-            filtros.append(ORMMensagem.hora <= filtro.hora_final)
-
-        if filtro.dias_semana:
-            filtros.append(extract('dow', ORMMensagem.timestamp).in_(filtro.dias_semana))
+        if numeros:
+            filtros.append(or_(ORMMensagem.remetente.in_(numeros), ORMMensagem.destinatario.in_(numeros)))
+        if operacoes:
+            filtros.append(ORMMensagem.internalTicketNumber.in_(operacoes))
+        if grupo and grupo.lower() != "all":
+            grupo_lower = grupo.lower()
+            if grupo_lower == "group":
+                filtros.append(ORMMensagem.grupoId.isnot(None))
+            elif grupo_lower == "number":
+                filtros.append(ORMMensagem.grupoId.is_(None))
+        if tipo and tipo.lower() != "all":
+            filtros.append(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
+        if data_inicial:
+            filtros.append(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
+        if data_final:
+            filtros.append(func.cast(ORMMensagem.data, db.Date) <= data_final)
+        if hora_inicio:
+            filtros.append(ORMMensagem.hora >= hora_inicio)
+        if hora_fim:
+            filtros.append(ORMMensagem.hora <= hora_fim)
 
         query = query.filter(and_(*filtros))
-
-        mensagens_orm = query.all()
-
+        mensagens = query.all()
         resultados = []
-        for mensagem in mensagens_orm:
+
+        for mensagem in mensagens:
             resultados.append({
                 "id": mensagem.id,
                 "remetente": mensagem.remetente,

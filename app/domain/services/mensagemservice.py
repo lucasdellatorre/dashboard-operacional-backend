@@ -2,6 +2,7 @@ from collections import defaultdict
 from typing import List
 
 from app.application.dto.filtrodto import FiltroDTO
+from app.application.dto.mensagensrequestdto import MensagensRequestDTO
 from app.domain.repositories.mensagemrepository import IMensagemRepository
 from app.domain.entities.numero import Numero
 from datetime import datetime
@@ -176,15 +177,15 @@ class MensagemService():
             hora_fim=hora_fim
         )
 
-    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
+    def buscar_por_filtro(self, filtro: MensagensRequestDTO):
         return self.repository.buscar_por_filtro(
-            numeros=filtro.numero,
-            tickets=filtro.operacoes,
-            tipo=filtro.tipo,
+            numeros=filtro.numeros,
+            suspeitos=filtro.suspeitos,
+            operacoes=filtro.operacoes,
             grupo=filtro.grupo,
+            tipo=filtro.tipo,
             data_inicial=filtro.data_inicial,
             data_final=filtro.data_final,
-            hora_inicio=filtro.hora_inicial,
-            hora_fim=filtro.hora_final,
-            dias_semana=filtro.dias_semana,
+            hora_inicio=filtro.hora_inicio,
+            hora_fim=filtro.hora_fim
         )

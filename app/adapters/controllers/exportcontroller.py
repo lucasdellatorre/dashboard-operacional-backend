@@ -1,64 +1,97 @@
-from flask import Blueprint, request, send_file, jsonify
+from flask import Blueprint, request
 from flask_restful import Api, Resource
-from io import BytesIO
-from zipfile import ZipFile
-import traceback
-
-from app.application.dto.filtrodto import FiltroDTO
+from app.application.dto.mensagensrequestdto import MensagensRequestDTO
+from app.application.usecases.exportusecase import ExportUseCase
 from app.application.factories.exportfactory import ExportFactory
-from app.domain.services.exportservice import ExportService
 from app.infraestructure.utils.logger import logger
 
-class ExportCSVController(Resource):
+class ExportController(Resource):
     def __init__(self, **kwargs):
-        self.export_service = kwargs["export_service"]
+        self.export_use_case: ExportUseCase = kwargs['export_use_case']
 
-    def get(self):
+    def post(self):
+        """
+        Exporta dados de suspeitos e mensagens com base em filtros.
+        ---
+        tags:
+          - Exportação
+        consumes:
+          - application/json
+        parameters:
+          - in: body
+            name: body
+            required: true
+            schema:
+              type: object
+              properties:
+                numeros:
+                  type: array
+                  items:
+                    type: string
+                suspeitos:
+                  type: array
+                  items:
+                    type: string
+                operacoes:
+                  type: array
+                  items:
+                    type: string
+                grupo:
+                  type: string
+                  enum: [group, number, all]
+                tipo:
+                  type: string
+                  enum: [image, audio, video, text, all]
+                data_inicial:
+                  type: string
+                  format: date
+                data_final:
+                  type: string
+                  format: date
+                hora_inicio:
+                  type: string
+                hora_fim:
+                  type: string
+        responses:
+          200:
+            description: Arquivo ZIP gerado com sucesso
+            content:
+              application/zip:
+                schema:
+                  type: string
+                  format: binary
+          400:
+            description: Requisição inválida
+          500:
+            description: Erro interno do servidor
+        """
         try:
-            numero = request.args.getlist("numero")
-            operacoes = request.args.getlist("operacoes")
-            grupo = request.args.get("grupo")
-            tipo = request.args.get("tipo")
-            data_inicial = request.args.get("data_inicial")
-            data_final = request.args.get("data_final")
-            hora_inicial = request.args.get("hora_inicial")
-            hora_final = request.args.get("hora_final")
-            dias_semana = request.args.getlist("dias_semana", type=int)
+            data = request.get_json()
 
-            filtro_dto = FiltroDTO(
-                numero=numero,
-                operacoes=operacoes,
-                grupo=grupo,
-                tipo=tipo,
-                data_inicial=data_inicial,
-                data_final=data_final,
-                hora_inicial=hora_inicial,
-                hora_final=hora_final,
-                dias_semana=dias_semana
-            )
+            dto = MensagensRequestDTO.from_dict({
+                "numeros": data.get("numeros", []),
+                "suspeitos": data.get("suspeitos", []),
+                "operacoes": data.get("operacoes", []),
+                "grupo": data.get("grupo"),
+                "tipo": data.get("tipo"),
+                "data_inicial": data.get("data_inicial"),
+                "data_final": data.get("data_final"),
+                "hora_inicio": data.get("hora_inicio"),
+                "hora_fim": data.get("hora_fim"),
+            })
 
-            csv_suspeitos, csv_mensagens_ligacoes = self.export_service.gerar_csvs(filtro_dto)
-
-            zip_buffer = BytesIO()
-            with ZipFile(zip_buffer, "w") as zip_file:
-                zip_file.writestr("suspeitos.csv", csv_suspeitos)
-                zip_file.writestr("mensagens_ligacoes.csv", csv_mensagens_ligacoes)
-
-            zip_buffer.seek(0)
-            return send_file(zip_buffer, mimetype='application/zip', as_attachment=True, download_name='export_teia.zip')
+            return self.export_use_case.execute(dto)
 
         except Exception as e:
-            logger.error(f"Erro ao exportar CSV: {e}")
-            traceback.print_exc()
-            return jsonify({"message": "Erro interno ao exportar os arquivos"}), 500
-
+            logger.error(f"Erro ao exportar: {e}")
+            return {"message": "Erro interno"}, 500
 
 # Blueprint
 blueprint_export = Blueprint("blueprint_export", __name__)
 api = Api(blueprint_export)
 
 api.add_resource(
-    ExportCSVController,
+    ExportController,
     "/exportar/csv",
-    resource_class_kwargs={"export_service": ExportFactory.build_export_service()}
+    resource_class_kwargs={"export_use_case": ExportFactory.export_use_case()}
 )
