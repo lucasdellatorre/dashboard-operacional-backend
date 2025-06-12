@@ -1,0 +1,103 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    env:
+      DASHBOARDOP_ENV: testing
+      DATABASE_URL: postgresql://fake_user:fake_pass@localhost/fake_db  # dummy value
+    container:
+      image: python:3.13.2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest --junitxml=test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.xml
+  deploy:
+    environment: main
+    name: Deploy to Heroku
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    container:
+      image: ruby:3.0
+    env:
+      API_PREFIX: api
+      DASHBOARDOP_ENV: production
+      EXTERNAL_PORT: "8000"
+      HOST: 0.0.0.0
+      FLASK_APP: app/server.py
+      FLASK_DEBUG: "0"
+      FLASK_ENV: production
+      FLASK_RUN_HOST: 0.0.0.0
+      FLASK_RUN_PORT: "8000"
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      HEROKU_APP_NAME_BACKEND: ${{ secrets.HEROKU_APP_NAME_BACKEND }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      REDISCLOUD_URL: ${{ secrets.REDISCLOUD_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Mark Git directory as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Unshallow repository
+        run: git fetch --unshallow
+
+      - name: Install curl
+        run: |
+          apt-get update -y
+          apt-get install -y curl
+
+      - name: Install Heroku CLI
+        run: curl https://cli-assets.heroku.com/install.sh | sh
+
+      - name: Authenticate with Heroku
+        run: |
+          echo "$HEROKU_API_KEY" | heroku auth:token
+          heroku auth:whoami
+
+      - name: Add Heroku remote
+        run: heroku git:remote -a "$HEROKU_APP_NAME_BACKEND"
+
+      - name: Set Heroku config vars
+        run: |
+          heroku config:set \
+            DASHBOARDOP_API_PREFIX="$API_PREFIX" \
+            DASHBOARDOP_ENV="$DASHBOARDOP_ENV" \
+            DASHBOARDOP_EXTERNAL_PORT="$EXTERNAL_PORT" \
+            DASHBOARDOP_HOST="$HOST" \
+            DATABASE_URL="$DATABASE_URL" \
+            REDISCLOUD_URL="$REDISCLOUD_URL" \
+            FLASK_APP="$FLASK_APP" \
+            FLASK_DEBUG="$FLASK_DEBUG" \
+            FLASK_ENV="$FLASK_ENV" \
+            FLASK_RUN_HOST="$FLASK_RUN_HOST" \
+            FLASK_RUN_PORT="$FLASK_RUN_PORT" \
+            --app "$HEROKU_APP_NAME_BACKEND"
+
+      - name: Push to Heroku
+        run: |
+          git push -f https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_BACKEND.git HEAD:main

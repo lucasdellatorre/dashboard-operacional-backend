@@ -33,7 +33,7 @@ def create_app(config_class=None):
     app = Flask(__name__)
     CORS(app)
     Api(app, prefix=prefix)
-    config = ConfigFactory().get_config()
+    config = config_class if config_class else ConfigFactory().get_config()
     app.config.from_object(config)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ECHO'] = False
