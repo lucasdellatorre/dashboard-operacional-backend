@@ -12,22 +12,67 @@ class TeiaIPController(Resource):
 
     def get(self):
         """
-        Retorna um grafo com nodos e links com base em IPs e mensagens.
+        Retorna a contagem de mensagens da teia por ip com base nos parâmetros fornecidos.
         ---
         tags:
-          - TeiaIP
+          - Teia
         parameters:
-          - in: query
-            name: ids
-            required: true
-            type: string
+          - name: numeros
+            in: query
+            required: false
+            schema:
+              type: array
+              items:
+                type: string
+          - name: suspeitos
+            in: query
+            required: false
+            schema:
+              type: array
+              items:
+                type: string
+          - name: operacoes
+            in: query
+            required: false
+            schema:
+              type: array
+              items:
+                type: string
+          - name: data_inicial
+            in: query
+            required: false
+            schema:
+              type: string
+              format: date
+          - name: data_final
+            in: query
+            required: false
+            schema:
+              type: string
+              format: date
+          - name: hora_inicio
+            in: query
+            required: false
+            schema:
+              type: string
+          - name: hora_fim
+            in: query
+            required: false
+            schema:
+              type: string
         responses:
           200:
-            description: Grafo gerado com sucesso
+            description: Contagem de mensagens retornada com sucesso
+            schema:
+              type: object
+              properties:
+                count:
+                  type: integer
+                  description: Número total de mensagens encontradas
           400:
-            description: Erro de validação
+            description: Erro de validação nos parâmetros fornecidos
           500:
-            description: Erro interno
+            description: Erro interno no servidor
         """
         try:
             data = request.args.to_dict(flat=False)
