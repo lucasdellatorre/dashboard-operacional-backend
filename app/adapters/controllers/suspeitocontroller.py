@@ -288,7 +288,7 @@ class AtualizaNumeroController(Resource):
     def __init__(self, **kwargs):
         self.adicionar_numero_suspeito_use_case: AdicionaNumeroSuspeitoUseCase = kwargs['adicionar_numero_suspeito_use_case']
               
-    def patch(self, id: int):
+    def post(self, id: int):
         """
         Adiciona uma lista de telefones para um suspeito.
         ---
