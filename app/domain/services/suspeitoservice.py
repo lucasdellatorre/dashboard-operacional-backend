@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Optional, List
+
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.repositories.numerorepository import INumeroRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
@@ -33,7 +35,7 @@ class SuspeitoService:
             "numeros": numeros
         }
 
-    
+
     def get_numeros_by_suspeito_ids(self, suspeito_ids: list[int]) -> list[dict]:
         numeros = self.suspeito_repository.get_numeros_by_suspeito_ids(suspeito_ids)
         return [{"numero": numero} for numero in numeros]
@@ -86,7 +88,7 @@ class SuspeitoService:
     
     def add_telefone(self, suspeito_id, numeros, cpf):
         return self.suspeito_repository.add_telefone(suspeito_id, numeros, cpf)
-    
+
     def get_all_email(self, suspeito_id):
         return self.suspeito_repository.get_all_email(suspeito_id)
             
@@ -123,7 +125,7 @@ class SuspeitoService:
 
     def is_suspeito(self, suspeito_id):
         return self.suspeito_repository.is_suspeito(suspeito_id)
-            
+
     def deletar(self, id: int):
         suspeito = self.suspeito_repository.get_by_id(id)
         if not suspeito:
@@ -141,3 +143,27 @@ class SuspeitoService:
         email.lastUpdateDate = datetime.utcnow()
 
         return self.suspeito_repository.update_email(email)
+
+    def buscar_por_filtro(
+            self,
+            numeros: List[str],
+            operacoes: List[str],
+            grupo: Optional[str] = None,
+            tipo: Optional[str] = None,
+            data_inicial: Optional[str] = None,
+            data_final: Optional[str] = None,
+            hora_inicial: Optional[str] = None,
+            hora_final: Optional[str] = None,
+            dias_semana: Optional[List[int]] = None
+    ) -> List[SuspeitoEntity]:
+        return self.suspeito_repository.buscar_por_filtro(
+            numeros,
+            operacoes,
+            grupo,
+            tipo,
+            data_inicial,
+            data_final,
+            hora_inicial,
+            hora_final,
+            dias_semana
+        )

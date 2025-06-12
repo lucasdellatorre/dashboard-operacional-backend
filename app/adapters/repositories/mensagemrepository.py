@@ -1,5 +1,9 @@
+from typing import List, Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case, or_, and_
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.mensagemrepository import IMensagemRepository
 from app.infraestructure.database.db import db
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
@@ -315,3 +319,51 @@ class MensagemRepository(IMensagemRepository):
         resultados = query.all()
 
         return [{"ip": r.ip, "qtdMensagens": r.qtdMensagens} for r in resultados]
+
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
+        query = self.session.query(ORMMensagem)
+
+        filtros = []
+
+        if filtro.numero:
+            filtros.append(ORMMensagem.remetente.in_(filtro.numero) | ORMMensagem.destinatario.in_(filtro.numero))
+
+        if filtro.operacoes:
+            filtros.append(ORMMensagem.internalTicketNumber.in_(filtro.operacoes))
+
+        if filtro.tipo and filtro.tipo != "all":
+            filtros.append(ORMMensagem.tipoMensagem == filtro.tipo)
+
+        if filtro.grupo and filtro.grupo != "all":
+            filtros.append(ORMMensagem.grupoId == filtro.grupo)
+
+        if filtro.data_inicial:
+            filtros.append(ORMMensagem.data >= filtro.data_inicial)
+
+        if filtro.data_final:
+            filtros.append(ORMMensagem.data <= filtro.data_final)
+
+        if filtro.hora_inicial:
+            filtros.append(ORMMensagem.hora >= filtro.hora_inicial)
+
+        if filtro.hora_final:
+            filtros.append(ORMMensagem.hora <= filtro.hora_final)
+
+        if filtro.dias_semana:
+            filtros.append(extract('dow', ORMMensagem.timestamp).in_(filtro.dias_semana))
+
+        query = query.filter(and_(*filtros))
+
+        mensagens_orm = query.all()
+
+        resultados = []
+        for mensagem in mensagens_orm:
+            resultados.append({
+                "id": mensagem.id,
+                "remetente": mensagem.remetente,
+                "destinatario": mensagem.destinatario,
+                "tipoMensagem": mensagem.tipoMensagem,
+                "timestamp": mensagem.timestamp
+            })
+
+        return resultados

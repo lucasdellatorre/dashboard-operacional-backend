@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional, Dict
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.entities.mensagem import Mensagem as DomainMensagem
-from typing import List, Dict
 
 class IMensagemRepository(ABC):
     @abstractmethod
@@ -55,7 +56,14 @@ class IMensagemRepository(ABC):
         }
         """
         raise NotImplementedError
-    
+
+    @abstractmethod
+    def buscar_por_filtro(
+            self,
+            filtro: FiltroDTO
+        ) -> List[dict]:
+        raise NotImplementedError
+
     @abstractmethod
     def contar_mensagens_por_dia(
         self,
@@ -77,7 +85,7 @@ class IMensagemRepository(ABC):
         }
         """
         raise NotImplementedError
-    
+
     @abstractmethod
     def contar_mensagens_por_ip(
         self,

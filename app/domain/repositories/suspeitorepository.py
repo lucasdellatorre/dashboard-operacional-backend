@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import List, Optional
+
+from app.application.dto.filtrodto import FiltroDTO
 from app.domain.entities.suspeito import Suspeito
 from app.domain.entities.suspeitoemail import SuspeitoEmail
 
@@ -73,14 +76,14 @@ class ISuspeitoRepository(ABC):
     @abstractmethod
     def is_suspeito(self) -> bool:
         raise(NotImplementedError)
-    
+
     @abstractmethod
     def add_telefone(self, suspeito_id, telefones, cpf) -> bool:
         """
         Adiciona telefones novos para um suspeito
         """
         pass
-    
+
     @abstractmethod
     def get_email_by_id(self, email_id: int) -> SuspeitoEmail | None:
         """
@@ -94,4 +97,8 @@ class ISuspeitoRepository(ABC):
         Atualiza um email existente.
         Deve retornar o objeto atualizado.
         """
-        pass    
+        pass
+
+    @abstractmethod
+    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[Suspeito]:
+        raise NotImplementedError
