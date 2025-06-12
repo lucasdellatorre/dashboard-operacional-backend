@@ -13,18 +13,9 @@ class ExportUseCase:
         self.target_resolver = target_resolver_service
 
 
-def execute(self, request_dto: MensagensRequestDTO):
+    def execute(self, request_dto: MensagensRequestDTO):
         numero_ids, tickets = self.target_resolver.resolver_alvos(request_dto)
-        suspeitos = self.suspeito_service.buscar_por_filtro(
-            numeros=numero_ids,
-            suspeitos=request_dto.suspeitos,
-            operacoes=request_dto.operacoes,
-            grupo=request_dto.grupo,
-            tipo=request_dto.tipo,
-            data_inicial=request_dto.data_inicial,
-            data_final=request_dto.data_final,
-            hora_inicio=request_dto.hora_inicio,
-            hora_fim=request_dto.hora_fim,)
+        suspeitos = self.suspeito_service.buscar_por_filtro(request_dto)
         mensagens = self.mensagem_service.buscar_por_filtro(numeros=numero_ids,
                                                             tickets=tickets,
                                                             tipo=request_dto.tipo,
