@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
+from app.application.dto.mensagensrequestdto import MensagensRequestDTO
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
 from app.domain.repositories.numerorepository import INumeroRepository
 from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
@@ -144,26 +145,15 @@ class SuspeitoService:
 
         return self.suspeito_repository.update_email(email)
 
-    def buscar_por_filtro(
-            self,
-            numeros: List[str],
-            operacoes: List[str],
-            grupo: Optional[str] = None,
-            tipo: Optional[str] = None,
-            data_inicial: Optional[str] = None,
-            data_final: Optional[str] = None,
-            hora_inicial: Optional[str] = None,
-            hora_final: Optional[str] = None,
-            dias_semana: Optional[List[int]] = None
-    ) -> List[SuspeitoEntity]:
+    def buscar_por_filtro(self, filtro_dto: MensagensRequestDTO) -> List[SuspeitoEntity]:
         return self.suspeito_repository.buscar_por_filtro(
-            numeros,
-            operacoes,
-            grupo,
-            tipo,
-            data_inicial,
-            data_final,
-            hora_inicial,
-            hora_final,
-            dias_semana
+            numeros=filtro_dto.numeros,
+            suspeitos=filtro_dto.suspeitos,
+            operacoes=filtro_dto.operacoes,
+            grupo=filtro_dto.grupo,
+            tipo=filtro_dto.tipo,
+            data_inicial=filtro_dto.data_inicial,
+            data_final=filtro_dto.data_final,
+            hora_inicio=filtro_dto.hora_inicio,
+            hora_fim=filtro_dto.hora_fim
         )

@@ -1,13 +1,12 @@
 from datetime import datetime
-from typing import List
-
+from typing import List, Optional
 from sqlalchemy.orm import joinedload, Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.application.dto.filtrodto import FiltroDTO
 from app.domain.repositories.suspeitorepository import ISuspeitoRepository
-from app.domain.entities.suspeito import Suspeito as SuspeitoEntity
+from app.domain.entities.suspeito import Suspeito as SuspeitoEntity, Suspeito
 from app.domain.entities.numerosuspeito import NumeroSuspeito as NumeroSuspeitoEntity
 from app.domain.entities.numero import Numero as NumeroEntity
 from app.domain.entities.suspeitoemail import SuspeitoEmail as SuspeitoEmailEntity
@@ -354,27 +353,23 @@ class SuspeitoRepository(ISuspeitoRepository):
 
         db.session.commit()
         return ORMSuspeitoEmail.toSuspeitoEmailEntidade(orm_email)
+      
+    def buscar_por_filtro(
+            self,
+            numeros: Optional[List[str]],
+            suspeitos: Optional[List[str]],
+            operacoes: Optional[List[str]],
+            grupo: Optional[str],
+            tipo: Optional[str],
+            data_inicial: Optional[str],
+            data_final: Optional[str],
+            hora_inicio: Optional[str],
+            hora_fim: Optional[str]
+        ) -> List[Suspeito]:
 
-    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[SuspeitoEntity]:
-        try:
-            query = self.session.query(ORMSuspeito)
+        query = self.session.query(ORMSuspeito).join(ORMNumeroSuspeito)
+        if suspeitos:
+            query = query.filter(ORMSuspeito.id.in_(suspeitos))
 
-            if filtro.numero:
-                query = query.join(ORMSuspeito.numero_suspeitos).join(ORMNumeroSuspeito.numero)
-                query = query.filter(ORMNumero.numero.in_(filtro.numero))
-
-            if filtro.operacoes:
-                pass
-
-
-            suspeitos_orm = query.all()
-
-            resultados = []
-            for orm_obj in suspeitos_orm:
-                resultados.append(ORMSuspeito.toEntity(orm_obj))
-
-            return resultados
-
-        except Exception as e:
-            logger.error(f"Erro em buscar_por_filtro: {e}")
-            return []
+        orm_results = query.all()
+        return [ORMSuspeito.toEntity(s) for s in orm_results]

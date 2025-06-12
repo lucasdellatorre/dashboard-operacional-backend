@@ -316,43 +316,58 @@ class MensagemRepository(IMensagemRepository):
         resultados = query.all()
 
         return [{"ip": r.ip, "qtdMensagens": r.qtdMensagens} for r in resultados]
+      
+    def buscar_por_filtro(
+            self,
+            numeros: Optional[List[str]],
+            tickets: Optional[List[str]],
+            tipo: Optional[str],
+            grupo: Optional[str],
+            data_inicial: Optional[str],
+            data_final: Optional[str],
+            hora_inicio: Optional[str],
+            hora_fim: Optional[str]
+    ) -> List[dict]:
+        numeros_ids = []
+        for numero in numeros or []:
+            if len(numero) < 9:
+                numeros_ids.append(numero)
+                
+        
+        query = self.session.query(ORMMensagem).filter(or_(
+                    ORMMensagem.numeroId.in_(numeros_ids),
+                    ORMMensagem.remetente.in_(numeros)
+                ))
+        
+        if tickets:
+            query = query.filter(ORMMensagem.internalTicketNumber.in_(tickets))
 
-    def buscar_por_filtro(self, filtro: FiltroDTO) -> List[dict]:
-        query = self.session.query(ORMMensagem)
+        if grupo and grupo.lower() != "all":
+            grupo_lower = grupo.lower()
+            if grupo_lower == "group":
+                query = query.filter(ORMMensagem.grupoId.isnot(None))
+            elif grupo_lower == "number":
+                query = query.filter(ORMMensagem.grupoId.is_(None))
+            else:
+                logger.warning(f"Grupo '{grupo}' não reconhecido. Nenhum filtro aplicado.")
 
-        filtros = []
+        if tipo and tipo.lower() != "all":
+            query = query.filter(func.lower(ORMMensagem.tipoMensagem) == tipo.lower())
 
-        if filtro.numero:
-            filtros.append(ORMMensagem.remetente.in_(filtro.numero) | ORMMensagem.destinatario.in_(filtro.numero))
+        if data_inicial:
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) >= data_inicial)
 
-        if filtro.operacoes:
-            filtros.append(ORMMensagem.internalTicketNumber.in_(filtro.operacoes))
+        if data_final:
+            query = query.filter(func.cast(ORMMensagem.data, db.Date) <= data_final)
 
-        if filtro.tipo and filtro.tipo != "all":
-            filtros.append(ORMMensagem.tipoMensagem == filtro.tipo)
+        if hora_inicio:
+            query = query.filter(ORMMensagem.hora >= hora_inicio)
 
-        if filtro.grupo and filtro.grupo != "all":
-            filtros.append(ORMMensagem.grupoId == filtro.grupo)
-
-        if filtro.data_inicial:
-            filtros.append(ORMMensagem.data >= filtro.data_inicial)
-
-        if filtro.data_final:
-            filtros.append(ORMMensagem.data <= filtro.data_final)
-
-        if filtro.hora_inicial:
-            filtros.append(ORMMensagem.hora >= filtro.hora_inicial)
-
-        if filtro.hora_final:
-            filtros.append(ORMMensagem.hora <= filtro.hora_final)
-
-        if filtro.dias_semana:
-            filtros.append(extract('dow', ORMMensagem.timestamp).in_(filtro.dias_semana))
-
-        query = query.filter(and_(*filtros))
-
+        if hora_fim:
+            query = query.filter(ORMMensagem.hora <= hora_fim)
+    
         mensagens_orm = query.all()
-
+      
         resultados = []
         for mensagem in mensagens_orm:
             resultados.append({
