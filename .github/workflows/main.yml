@@ -55,6 +55,7 @@ jobs:
       HEROKU_APP_NAME_BACKEND: ${{ secrets.HEROKU_APP_NAME_BACKEND }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       REDISCLOUD_URL: ${{ secrets.REDISCLOUD_URL }}
+      LOGTAIL_TOKEN: ${{ secrets.LOGTAIL_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -96,6 +97,7 @@ jobs:
             FLASK_ENV="$FLASK_ENV" \
             FLASK_RUN_HOST="$FLASK_RUN_HOST" \
             FLASK_RUN_PORT="$FLASK_RUN_PORT" \
+            LOGTAIL_TOKEN="$LOGTAIL_TOKEN" \
             --app "$HEROKU_APP_NAME_BACKEND"
 
       - name: Push to Heroku
