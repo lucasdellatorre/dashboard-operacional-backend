@@ -1,25 +1,20 @@
 import logging
+import os
+from logtail import LogtailHandler
 
-# create logger
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-# create console handler and set level to debug
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+# Logtail handler
+logtail_token = os.environ.get("LOGTAIL_TOKEN")
+if logtail_token:
+    handler = LogtailHandler(source_token=logtail_token)
+    logger.addHandler(handler)
+else:
+    # fallback to console if no Logtail token
+    handler = logging.StreamHandler()
+    logger.addHandler(handler)
 
-# create formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',  datefmt='%m/%d/%Y %I:%M:%S %p')
-
-# add formatter to ch
-ch.setFormatter(formatter)
-
-# add ch to logger
-logger.addHandler(ch)
-
-# 'application' code
-# logger.debug('debug message')
-# logger.info('info message')
-# logger.warning('warn message')
-# logger.error('error message')
-# logger.critical('critical message')
+# Optional formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
