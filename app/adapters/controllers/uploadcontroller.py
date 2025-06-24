@@ -98,7 +98,7 @@ class InterceptacaoUploadController(Resource):
 
         except Exception as e:
             logger.exception("[UPLOAD] Erro interno ao iniciar o job")
-            return {'message': 'Internal Server Error'}, 500
+            return {'message': 'Internal Server Error', 'log': f'{e}'}, 500
 
 
 # Blueprint e registro do controller
