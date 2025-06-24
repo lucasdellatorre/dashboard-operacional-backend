@@ -25,7 +25,7 @@ def set_job_metadata(job_id: str, nome: str, size: int, data_upload: str):
         "data_upload": data_upload
     }))
 
-def set_progress(job_id: str, status: str, progress: int, erro: bool = False, mensagem: str = None, ttl_seconds: int = 60):
+def set_progress(job_id: str, status: str, progress: int, erro: bool = False, mensagem: str = None, ttl_seconds: int = 600):
     r.set(
         f"job:{job_id}",
         json.dumps({
