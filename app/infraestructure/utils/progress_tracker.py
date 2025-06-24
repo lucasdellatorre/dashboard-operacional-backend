@@ -38,9 +38,17 @@ def set_progress(job_id: str, status: str, progress: int, erro: bool = False, me
     )
 
 def get_progress(job_id: str):
-    raw = r.get(f"job:{job_id}")
-    if raw:
-        return json.loads(raw)
+    try:
+        raw = r.get(f"job:{job_id}")
+        if raw:
+            return json.loads(raw)
+    except (json.JSONDecodeError, redis.RedisError) as e:
+        return {
+            "status": "error",
+            "progress": 0,
+            "erro": True,
+            "mensagem": f"Erro ao recuperar o job: {str(e)}"
+        }
     return {
         "status": "not found",
         "progress": 0,
